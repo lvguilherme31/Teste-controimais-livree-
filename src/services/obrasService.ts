@@ -109,7 +109,7 @@ export const obrasService = {
             description: d.descricao || undefined,
           })
         } else {
-          let key = d.tipo
+          let key: string = d.tipo
           // If duplicate types exist (e.g. multiple 'outros'), ensure unique key
           if (documents[key]) {
             key = `${d.tipo}_${d.id}`
@@ -180,7 +180,7 @@ export const obrasService = {
           description: d.descricao || undefined,
         })
       } else {
-        let key = d.tipo
+        let key: string = d.tipo
         if (documents[key]) {
           key = `${d.tipo}_${d.id}`
         }
@@ -254,7 +254,6 @@ export const obrasService = {
 
     if (error) throw error
 
-    // @ts-expect-error - Accessing join result property
     return data.map((log) => ({
       id: log.id,
       obraId: log.obra_id,
@@ -560,8 +559,7 @@ export const obrasService = {
 
     const { error: dbError } = await supabase.from('documentos_obras').insert({
       obra_id: obraId,
-      // @ts-expect-error - Dynamic type
-      tipo: safeType,
+      tipo: safeType as any,
       nome_arquivo: fileName, // Can be null now
       url_arquivo: publicUrl, // Can be null now
       data_validade: expiry ? safeIsoString(expiry) : null,
