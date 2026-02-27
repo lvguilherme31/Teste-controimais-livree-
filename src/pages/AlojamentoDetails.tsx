@@ -384,7 +384,7 @@ export default function AlojamentoDetails() {
             data_vencimento: dueDate.toISOString(),
             status: 'pendente',
             categoria_id: null,
-            obra_id: data.projectId,
+            obra_id: data.projectId || null,
             url_boleto: util.documentUrl || '',
             alojamento_id: targetId,
           }
