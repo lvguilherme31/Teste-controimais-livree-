@@ -139,12 +139,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="bg-sidebar py-4">
         <div className="flex items-center gap-2 px-2 overflow-hidden transition-all duration-300 group-data-[collapsible=icon]:justify-center">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Building2 className="h-5 w-5" />
-          </div>
-          <span className="font-bold text-lg text-sidebar-foreground truncate group-data-[collapsible=icon]:hidden">
-            Constroimais
-          </span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-primary-foreground overflow-hidden"><img src="/logo.png" alt="TOPAZIO" className="h-full w-full object-contain" /></div>
+          <span className="font-bold text-lg text-sidebar-foreground truncate group-data-[collapsible=icon]:hidden">TOPAZIO</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="bg-sidebar text-sidebar-foreground">

@@ -174,19 +174,8 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-[440px] p-4">
         <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-8 md:p-10">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-black/20 p-3">
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-full h-full"
-              >
-                <path d="M4 44L4 24L14 19V44H4Z" fill="#f97316" />
-                <path d="M19 44V16.5L29 11.5V44H19Z" fill="#f97316" />
-                <path d="M34 44V9L44 4V44H34Z" fill="#f97316" />
-              </svg>
-            </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Constroimais</h1>
+            <div className="bg-white rounded-2xl flex flex-col items-center justify-center mb-4 shadow-lg shadow-black/20 p-2 overflow-hidden"><img src="/logo.png" alt="TOPAZIO Empreendimentos" className="h-[72px] object-contain" /></div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">TOPAZIO</h1>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
@@ -326,7 +315,7 @@ export default function Login() {
 
       <div className="relative z-10 mt-8 text-center px-4">
         <p className="text-slate-500 text-xs font-medium">
-          © 2025 Constroimais. Todos os direitos reservados.
+          © 2025 TOPAZIO Empreendimentos. Todos os direitos reservados.
         </p>
       </div>
     </div>
