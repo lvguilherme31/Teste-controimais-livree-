@@ -76,15 +76,13 @@ export default function Dashboard() {
       if (b.status === 'pending' || b.status === 'overdue') {
         const date = new Date(b.dueDate)
         const status = getAlertStatus(date)
-        const isRental = b.category === 'Aluguel de Equipamentos' || !!b.aluguel_id
-
         allAlerts.push({
-          type: isRental ? 'Aluguel' : 'Financeiro',
+          type: 'Financeiro',
           message: `${b.description}`,
           date: date,
           status: status,
-          path: isRental ? '/alugueis' : '/financeiro',
-          icon: isRental ? HardHat : DollarSign,
+          path: '/financeiro',
+          icon: DollarSign,
           source: 'bill',
           category: 'Financeiro',
         })

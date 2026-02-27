@@ -259,7 +259,7 @@ export default function AluguelEquipamentos() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Excluir Aluguel</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tem certeza que deseja remover este aluguel? O lançamento correspondente em Contas a Pagar também será excluído.
+                            Tem certeza que deseja remover este aluguel?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

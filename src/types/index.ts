@@ -65,7 +65,6 @@ export interface Bill {
   accommodationId?: string
   accommodationName?: string
   paymentMethod?: string
-  aluguel_id?: string
 }
 
 export type EmployeeStatus = 'ativo' | 'ferias' | 'afastado' | 'desligado'

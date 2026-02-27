@@ -52,7 +52,7 @@ export const financeiroService = {
             attachmentUrl: item.url_boleto,
             paidDate: item.data_pagamento ? new Date(item.data_pagamento) : undefined,
             origin: item.alojamento_id ? 'alojamento' : 'manual', // Simple logic for now
-            category: item.categoria?.nome || item.categoria_nome || 'Geral', // Handle relation or fallback
+            category: item.categoria?.nome || item.categoria_nome || 'Geral',
             projectId: item.obra_id,
             accommodationId: item.alojamento_id,
             accommodationName: item.alojamento?.nome,
@@ -86,8 +86,7 @@ export const financeiroService = {
                 alojamento_id: bill.accommodationId,
                 obra_id: bill.projectId,
                 categoria_id: categoria_id,
-                forma_pagamento: bill.paymentMethod,
-                aluguel_id: (bill as any).aluguel_id
+                forma_pagamento: bill.paymentMethod
             })
             .select()
             .single()
@@ -115,7 +114,6 @@ export const financeiroService = {
         if (updates.barcode !== undefined) dbUpdates.codigo_barras = updates.barcode
         if (updates.attachmentUrl !== undefined) dbUpdates.url_boleto = updates.attachmentUrl
         if (updates.paidDate !== undefined) dbUpdates.data_pagamento = updates.paidDate.toISOString().split('T')[0]
-        if ((updates as any).aluguel_id !== undefined) dbUpdates.aluguel_id = (updates as any).aluguel_id
 
         // Map category name to categoria_id
         if (updates.category !== undefined) {

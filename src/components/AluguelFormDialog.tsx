@@ -107,7 +107,7 @@ export function AluguelFormDialog({
                 toast.success('Aluguel atualizado com sucesso')
             } else {
                 await addRental(payload as any)
-                toast.success('Aluguel cadastrado e lançado no financeiro')
+                toast.success('Aluguel cadastrado com sucesso')
             }
             onSuccess()
             onOpenChange(false)
@@ -165,6 +165,7 @@ export function AluguelFormDialog({
                                 })()}
                             </div>
                         </div>
+
                         <div className="space-y-2 sm:col-span-2">
                             <Label htmlFor="obra">Obra Alocada</Label>
                             <Select
@@ -284,6 +285,6 @@ export function AluguelFormDialog({
                     </DialogFooter>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

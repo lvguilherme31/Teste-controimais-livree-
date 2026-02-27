@@ -1,140 +1,35 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { format } from 'date-fns'
+import { supabase } from '@/lib/supabase/client'
 import {
-  User,
   Bill,
   Employee,
   Project,
+  User,
+  UserInvite,
+  Accommodation,
   Vehicle,
   Invoice,
   Budget,
-  Accommodation,
   ProjectHistory,
   ServiceProvider,
   Tool,
   AluguelEquipamento,
-  EmployeePayment,
-  Payslip,
-  UserInvite,
+  EmployeePayment
 } from '@/types'
-import { obrasService } from '@/services/obrasService'
-import { veiculosService } from '@/services/veiculosService'
-import { alojamentosService } from '@/services/alojamentosService'
-import { prestadoresService } from '@/services/prestadoresService'
-import { colaboradoresService } from '@/services/colaboradoresService'
-import { notasService } from '@/services/notasService'
-import { orcamentosService } from '@/services/orcamentosService'
 import { financeiroService } from '@/services/financeiroService'
+import { colaboradoresService } from '@/services/colaboradoresService'
+import { obrasService } from '@/services/obrasService'
+import { alojamentosService as acomodacaoService } from '@/services/alojamentosService'
+import { veiculosService as veiculoService } from '@/services/veiculosService'
+import { notasService as notasFiscaisService } from '@/services/notasService'
+import { orcamentosService as orcamentoService } from '@/services/orcamentosService'
+import { usersService as usuariosService } from '@/services/usersService'
+import { prestadoresService } from '@/services/prestadoresService'
 import { ferramentasService } from '@/services/ferramentasService'
 import { aluguelService } from '@/services/aluguelService'
 import { pagamentosService } from '@/services/pagamentosService'
-import { usersService } from '@/services/usersService'
-import { supabase } from '@/lib/supabase/client'
-
-const GUEST_USER: User = {
-  id: 'guest-user',
-  name: 'Visitante',
-  email: 'visitante@aparecidacortez.com.br',
-  role: 'super_admin',
-  companyName: 'Aparecida Cortez Lopes - Construção',
-  cnpj: '23.497.744/0001-69',
-  phone: '(11) 99999-9999',
-  permissions: {
-    dashboard: true,
-    obras: true,
-    colaboradores: true,
-    alojamento: true,
-    veiculos: true,
-    fichario_funcoes: true,
-    ferramentas: true,
-    financeiro: true,
-    contas_pagar: true,
-    pagamento_colaboradores: true,
-    notas_fiscais: true,
-    aluguel_equipamentos: true,
-    orcamentos: true,
-    configuracoes: true,
-  },
-}
-
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Luis Guilherme',
-    email: 'luisguilhermevsc@gmail.com',
-    role: 'super_admin',
-    companyName: 'Aparecida Cortez Lopes - Construção',
-    cnpj: '23.497.744/0001-69',
-    phone: '(11) 99999-9999',
-    permissions: {
-      dashboard: true,
-      obras: true,
-      colaboradores: true,
-      alojamento: true,
-      veiculos: true,
-      fichario_funcoes: true,
-      ferramentas: true,
-      financeiro: true,
-      contas_pagar: true,
-      pagamento_colaboradores: true,
-      notas_fiscais: true,
-      aluguel_equipamentos: true,
-      orcamentos: true,
-      configuracoes: true,
-    },
-  },
-  {
-    id: '2',
-    name: 'Murilo Topazio Prudente',
-    email: 'murilotopazioprudente@gmail.com',
-    role: 'admin',
-    companyName: 'Aparecida Cortez Lopes - Construção',
-    cnpj: '23.497.744/0001-69',
-    phone: '(11) 98888-8888',
-    permissions: {
-      dashboard: true,
-      obras: true,
-      colaboradores: true,
-      alojamento: true,
-      veiculos: true,
-      fichario_funcoes: true,
-      ferramentas: true,
-      financeiro: true,
-      contas_pagar: true,
-      pagamento_colaboradores: true,
-      notas_fiscais: true,
-      aluguel_equipamentos: true,
-      orcamentos: true,
-      configuracoes: true,
-    },
-  },
-  {
-    id: '3',
-    name: 'Fabio Topazio Prudente',
-    email: 'fabiotopazioprudente@gmail.com',
-    role: 'admin',
-    companyName: 'Aparecida Cortez Lopes - Construção',
-    cnpj: '23.497.744/0001-69',
-    phone: '(11) 97777-7777',
-    permissions: {
-      dashboard: true,
-      obras: true,
-      colaboradores: true,
-      alojamento: true,
-      veiculos: true,
-      fichario_funcoes: true,
-      ferramentas: true,
-      financeiro: true,
-      contas_pagar: true,
-      pagamento_colaboradores: true,
-      notas_fiscais: true,
-      aluguel_equipamentos: true,
-      orcamentos: true,
-      configuracoes: true,
-    },
-  },
-]
+import { toast } from 'sonner'
 
 interface AppState {
   isAuthenticated: boolean
@@ -156,9 +51,7 @@ interface AppState {
   loadingTools: boolean
   expiringDocuments: any[]
   employeePayments: EmployeePayment[]
-  isGeneratingRentals: boolean
   generateMonthlyObligations: () => Promise<void>
-  generateMonthlyRentals: () => Promise<void>
 
   // Actions
   login: (email: string) => void
@@ -259,105 +152,69 @@ export const useAppStore = create<AppState>()(
       loadingTools: false,
       expiringDocuments: [],
       employeePayments: [],
-      isGeneratingRentals: false,
 
       setCurrentUser: (user) => set({ currentUser: user }),
       setIsAuthenticated: (val) => set({ isAuthenticated: val }),
       setIsInitializing: (val) => set({ isInitializing: val }),
-      setUsers: (users) => set({ users }),
 
       login: async (email) => {
-        set({ isAuthenticated: true })
         try {
-          // Fetch real user from DB
-          const user = await usersService.getByEmail(email)
+          const user = await usuariosService.getByEmail(email)
           if (user) {
-            set({ currentUser: user })
+            set({ currentUser: user, isAuthenticated: true })
           } else {
-            // Check if it's the specific guest email OR the primary owner
-            const isOwner = ['luisguilhermevsc@gmail.com', 'luisguilhermevsc@me.com', 'murilotopazioprudente@gmail.com'].includes(email);
-
-            if (email === GUEST_USER.email || isOwner) {
-              set({ currentUser: { ...GUEST_USER, email } })
-            } else {
-              // Only revoke access for secondary users not in DB
-              console.warn(`User ${email} not found in DB. Revoking access.`)
-              get().logout()
-            }
+            set({ isAuthenticated: false, currentUser: null })
           }
         } catch (error) {
-          console.error('Error logging in:', error)
-          // On error, let's be safe and logout
-          get().logout()
+          console.error('Error in login action:', error)
+          set({ isAuthenticated: false, currentUser: null })
         } finally {
           set({ isInitializing: false })
         }
-        get().fetchProjects()
       },
 
       logout: () => {
+        set({ isAuthenticated: false, currentUser: null })
         supabase.auth.signOut()
-        set({ currentUser: null, isAuthenticated: false, isInitializing: false })
       },
 
-      updateCurrentUser: (updates) => {
-        const { currentUser, users } = get()
-        if (!currentUser) return
-        const updatedUser = { ...currentUser, ...updates }
-        set({
-          currentUser: updatedUser,
-          users: users.map((u) => (u.id === currentUser.id ? updatedUser : u)),
-        })
+      updateCurrentUser: async (updates) => {
+        const { currentUser } = get()
+        if (currentUser) {
+          const updatedUser = { ...currentUser, ...updates }
+          set({ currentUser: updatedUser })
+          await usuariosService.update(currentUser.id, updates)
+        }
       },
 
+      setUsers: (users) => set({ users }),
       addUser: (user) => set((state) => ({ users: [...state.users, user] })),
       deleteUser: async (userId) => {
-        try {
-          await usersService.delete(userId)
-          set((state) => ({ users: state.users.filter((u) => u.id !== userId) }))
-        } catch (error) {
-          console.error('Error deleting user:', error)
-          throw error
-        }
+        await usuariosService.delete(userId)
+        set((state) => ({ users: state.users.filter((u) => u.id !== userId) }))
       },
-      updateUser: (id, updates) => set((state) => ({
-        users: state.users.map((u) => (u.id === id ? { ...u, ...updates } : u))
-      })),
+      updateUser: (id, updates) =>
+        set((state) => ({
+          users: state.users.map((u) => (u.id === id ? { ...u, ...updates } : u)),
+        })),
 
       fetchUsers: async () => {
-        try {
-          const data = await usersService.getAll()
-          set({ users: data || [] })
-
-          // Also update currentUser if it's already set (to sync permissions/role)
-          const { currentUser } = get()
-          if (currentUser?.email) {
-            const updatedProfile = data.find(u => u.email === currentUser.email)
-            if (updatedProfile) {
-              set({ currentUser: updatedProfile })
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching users:', error)
-        }
+        const users = await usuariosService.getAll()
+        set({ users })
       },
 
       fetchInvites: async () => {
-        try {
-          const data = await usersService.getInvites()
-          set({ invites: data || [] })
-        } catch (error) {
-          console.error('Error fetching invites:', error)
-        }
+        const invites = await usuariosService.getInvites()
+        set({ invites })
       },
 
       sendInvite: async (invite) => {
-        await usersService.createInvite(invite)
+        await usuariosService.createInvite(invite)
         await get().fetchInvites()
       },
 
       removeInvite: async (email) => {
-        await usersService.deleteInvite(email)
+        await usuariosService.deleteInvite(email)
         await get().fetchInvites()
       },
 
@@ -395,27 +252,19 @@ export const useAppStore = create<AppState>()(
       },
 
       addEmployee: async (employee) => {
-        const newEmp = await colaboradoresService.create(employee)
-        set((state) => ({ employees: [...state.employees, newEmp] }))
+        const newEmployee = await colaboradoresService.create(employee)
         await get().fetchEmployees()
-        return newEmp
+        return newEmployee
       },
 
       updateEmployee: async (id, updates) => {
         await colaboradoresService.update(id, updates)
-        set((state) => ({
-          employees: state.employees.map((e) => (e.id === id ? { ...e, ...updates } : e))
-        }))
         await get().fetchEmployees()
-        get().fetchExpiringDocuments()
       },
 
       deleteEmployee: async (id) => {
         await colaboradoresService.delete(id)
-        set((state) => ({
-          employees: state.employees.filter((e) => e.id !== id)
-        }))
-        get().fetchExpiringDocuments()
+        await get().fetchEmployees()
       },
 
       fetchProjects: async () => {
@@ -431,23 +280,18 @@ export const useAppStore = create<AppState>()(
       },
 
       addProject: async (project, files) => {
-        await obrasService.create(project as Project, files)
+        await obrasService.create(project as any, files)
         await get().fetchProjects()
-        await get().fetchExpiringDocuments()
       },
 
       updateProject: async (id, updates, files) => {
         await obrasService.update(id, updates, files)
         await get().fetchProjects()
-        await get().fetchExpiringDocuments()
       },
 
       deleteProject: async (id) => {
         await obrasService.delete(id)
-        set((state) => ({
-          projects: state.projects.filter((p) => p.id !== id)
-        }))
-        await get().fetchExpiringDocuments()
+        await get().fetchProjects()
       },
 
       getProjectHistory: async (id) => {
@@ -456,7 +300,7 @@ export const useAppStore = create<AppState>()(
 
       fetchVehicles: async () => {
         try {
-          const data = await veiculosService.getAll()
+          const data = await veiculoService.getAll()
           set({ vehicles: data || [] })
         } catch (error) {
           console.error('Error fetching vehicles:', error)
@@ -464,29 +308,24 @@ export const useAppStore = create<AppState>()(
       },
 
       addVehicle: async (vehicle) => {
-        const newVehicle = await veiculosService.create(vehicle)
-        set((state) => ({ vehicles: [...state.vehicles, newVehicle] }))
-        get().fetchExpiringDocuments()
+        const newVehicle = await veiculoService.create(vehicle)
+        await get().fetchVehicles()
         return newVehicle
       },
 
-      updateVehicle: (id, updates) => {
-        set((state) => ({
-          vehicles: state.vehicles.map((v) => (v.id === id ? { ...v, ...updates } : v))
-        }))
+      updateVehicle: async (id, updates) => {
+        await veiculoService.update(id, updates)
+        await get().fetchVehicles()
       },
 
       deleteVehicle: async (id) => {
-        await veiculosService.delete(id)
-        set((state) => ({
-          vehicles: state.vehicles.filter((v) => v.id !== id)
-        }))
-        get().fetchExpiringDocuments()
+        await veiculoService.delete(id)
+        await get().fetchVehicles()
       },
 
       fetchInvoices: async () => {
         try {
-          const data = await notasService.getAll()
+          const data = await notasFiscaisService.getAll()
           set({ invoices: data || [] })
         } catch (error) {
           console.error('Error fetching invoices:', error)
@@ -494,25 +333,23 @@ export const useAppStore = create<AppState>()(
       },
 
       addInvoice: async (invoice) => {
-        await notasService.create(invoice)
+        await notasFiscaisService.create(invoice)
         await get().fetchInvoices()
       },
 
       updateInvoice: async (id, updates) => {
-        await notasService.update(id, updates)
+        await notasFiscaisService.update(id, updates)
         await get().fetchInvoices()
       },
 
       deleteInvoice: async (id) => {
-        await notasService.delete(id)
-        set((state) => ({
-          invoices: state.invoices.filter((inv) => inv.id !== id)
-        }))
+        await notasFiscaisService.delete(id)
+        await get().fetchInvoices()
       },
 
       fetchBudgets: async () => {
         try {
-          const data = await orcamentosService.getAll()
+          const data = await orcamentoService.getAll()
           set({ budgets: data || [] })
         } catch (error) {
           console.error('Error fetching budgets:', error)
@@ -520,30 +357,28 @@ export const useAppStore = create<AppState>()(
       },
 
       addBudget: async (budget, files) => {
-        await orcamentosService.create(budget, files)
+        await orcamentoService.create(budget, files)
         await get().fetchBudgets()
       },
 
       updateBudget: async (id, updates, files) => {
-        await orcamentosService.update(id, updates, files)
+        await orcamentoService.update(id, updates, files)
         await get().fetchBudgets()
       },
 
       deleteBudget: async (id) => {
-        await orcamentosService.delete(id)
-        set((state) => ({
-          budgets: state.budgets.filter((b) => b.id !== id)
-        }))
+        await orcamentoService.delete(id)
+        await get().fetchBudgets()
       },
 
       deleteBudgetAttachment: async (id) => {
-        await orcamentosService.deleteAttachment(id)
+        await orcamentoService.deleteAttachment(id)
         await get().fetchBudgets()
       },
 
       fetchAccommodations: async () => {
         try {
-          const data = await alojamentosService.getAll()
+          const data = await acomodacaoService.getAll()
           set({ accommodations: data || [] })
         } catch (error) {
           console.error('Error fetching accommodations:', error)
@@ -551,63 +386,18 @@ export const useAppStore = create<AppState>()(
       },
 
       addAccommodation: async (accommodation) => {
-        // Just add to local state; the creation in DB is handled by the component
-        set((state) => ({ accommodations: [...state.accommodations, accommodation] }))
+        await acomodacaoService.create(accommodation)
+        await get().fetchAccommodations()
       },
 
       updateAccommodation: async (id, updates) => {
-        await alojamentosService.update(id, updates)
-        set((state) => ({
-          accommodations: state.accommodations.map((a) => (a.id === id ? { ...a, ...updates } : a))
-        }))
+        await acomodacaoService.update(id, updates)
+        await get().fetchAccommodations()
       },
 
       deleteAccommodation: async (id) => {
-        await alojamentosService.delete(id)
-        set((state) => ({
-          accommodations: state.accommodations.filter((a) => a.id !== id)
-        }))
-      },
-
-      fetchExpiringDocuments: async () => {
-        try {
-          const [obrasDocs, collabDocs, veiculosDocs] = await Promise.all([
-            obrasService.getExpiringDocs(),
-            colaboradoresService.getExpiringDocs(),
-            veiculosService.getExpiringDocs(),
-          ])
-
-          const normalizedObras = obrasDocs.map((d: any) => ({
-            ...d,
-            category: 'Obra',
-            entityName: d.obra?.nome || 'Obra Desconhecida',
-            path: `/obras/${d.obra_id}`,
-          }))
-
-          const normalizedCollab = collabDocs.map((d: any) => ({
-            ...d,
-            category: 'Colaborador',
-            entityName: d.colaborador?.nome || 'Colaborador',
-            path: `/colaboradores/${d.colaborador_id}`,
-          }))
-
-          const normalizedVeiculos = veiculosDocs.map((d: any) => ({
-            ...d,
-            category: 'Veículo',
-            entityName: d.veiculo
-              ? `${d.veiculo.modelo} - ${d.veiculo.placa}`
-              : 'Veículo',
-            path: `/veiculos`,
-          }))
-
-          const all = [...normalizedObras, ...normalizedCollab, ...normalizedVeiculos].sort(
-            (a, b) => new Date(a.data_validade).getTime() - new Date(b.data_validade).getTime(),
-          )
-
-          set({ expiringDocuments: all })
-        } catch (error) {
-          console.error('Error fetching expiring docs:', error)
-        }
+        await acomodacaoService.delete(id)
+        await get().fetchAccommodations()
       },
 
       fetchServiceProviders: async () => {
@@ -665,30 +455,34 @@ export const useAppStore = create<AppState>()(
         try {
           const data = await aluguelService.getAll()
           set({ rentals: data || [] })
-
-          // Automatically check and generate monthly bills for active rentals
-          await get().generateMonthlyRentals()
         } catch (error) {
           console.error('Error fetching rentals:', error)
         }
       },
 
       addRental: async (rental) => {
-        await aluguelService.create(rental)
+        await aluguelService.create(rental as any)
         await get().fetchRentals()
-        await get().fetchBills() // Refresh bills as rental creates a bill
       },
 
       updateRental: async (id, updates) => {
         await aluguelService.update(id, updates)
         await get().fetchRentals()
-        await get().fetchBills()
       },
 
       deleteRental: async (id) => {
         await aluguelService.delete(id)
         await get().fetchRentals()
-        await get().fetchBills()
+      },
+
+      fetchExpiringDocuments: async () => {
+        const { data, error } = await (supabase as any).from('documentos_expirando').select('*')
+
+        if (error) {
+          console.error('Error fetching expiring documents:', error)
+          return
+        }
+        set({ expiringDocuments: data || [] })
       },
 
       fetchEmployeesPayments: async () => {
@@ -696,7 +490,7 @@ export const useAppStore = create<AppState>()(
           const data = await pagamentosService.getAll()
           set({ employeePayments: data || [] })
 
-          // Automatically check and generate monthly obligations for active employees
+          // Auto generate monthly obligations
           await get().generateMonthlyObligations()
         } catch (error) {
           console.error('Error fetching employee payments:', error)
@@ -704,31 +498,32 @@ export const useAppStore = create<AppState>()(
       },
 
       generateMonthlyObligations: async () => {
-        const currentMonth = format(new Date(), 'yyyy-MM')
-        const { employees, employeePayments } = get()
+        const { employees } = get()
+        const currentMonth = new Date().getMonth()
+        const currentYear = new Date().getFullYear()
 
-        const activeEmployees = employees.filter(e => e.status === 'ativo')
+        for (const emp of employees) {
+          // Check if already has payment for this month
+          const { data: existing } = await (supabase
+            .from('pagamentos_colaboradores') as any)
+            .select('id')
+            .eq('colaborador_id', emp.id)
+            .eq('mes', currentMonth + 1)
+            .eq('ano', currentYear)
+            .maybeSingle()
 
-        // Find employees who don't have a payment record for the current month
-        const missingObligations = activeEmployees.filter(emp =>
-          !employeePayments.some(p => p.colaboradorId === emp.id && p.mesReferencia === currentMonth)
-        )
+          if (existing) continue
 
-        if (missingObligations.length === 0) return
-
-        console.log(`Generating auto-obligations for ${missingObligations.length} employees for ${currentMonth}`)
-
-        for (const emp of missingObligations) {
+          // Create obligation
           try {
-            // Replicate the logic from addEmployeePayment but without the fetch at the end
             const payment = {
-              colaboradorId: emp.id,
-              mesReferencia: currentMonth,
-              valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
-              status: 'pendente' as const,
+              colaborador_id: emp.id,
+              valor_base: emp.salary || 0,
+              mes: currentMonth + 1,
+              ano: currentYear,
+              status: 'pendente'
             }
-
-            const created = await pagamentosService.create(payment)
+            await pagamentosService.create(payment as any)
           } catch (error) {
             console.error(`Failed to generate obligation for employee ${emp.id}:`, error)
           }
@@ -737,73 +532,6 @@ export const useAppStore = create<AppState>()(
         // Refresh once after batch creation
         const updatedData = await pagamentosService.getAll()
         set({ employeePayments: updatedData || [] })
-      },
-
-      generateMonthlyRentals: async () => {
-        // Mutex to prevent multiple parallel runs
-        if (get().isGeneratingRentals) return
-        set({ isGeneratingRentals: true })
-
-        try {
-          // Refresh bills FIRST to avoid creating duplicates based on stale local state
-          await get().fetchBills()
-
-          const { rentals, bills } = get()
-          const currentDate = new Date()
-          const currentMonth = currentDate.getUTCMonth()
-          const currentYear = currentDate.getUTCFullYear()
-
-          let createdAny = false
-
-          for (const rental of rentals) {
-            // Check if there is already a bill for this rental in the current month
-            const hasBillThisMonth = (bills || []).some(b => {
-              if (b.aluguel_id !== rental.id) return false
-              const billDate = new Date(b.dueDate)
-              return billDate.getUTCMonth() === currentMonth && billDate.getUTCFullYear() === currentYear
-            })
-
-            if (!hasBillThisMonth) {
-              const rentalDate = new Date(rental.dataVencimento)
-              const rentalStartMonth = rentalDate.getUTCMonth()
-              const rentalStartYear = rentalDate.getUTCFullYear()
-              const rentalStartDay = rentalDate.getUTCDate()
-
-              // Only generate if the rental has already started (or starts this month)
-              const isFutureStartDate = rentalStartYear > currentYear || (rentalStartYear === currentYear && rentalStartMonth > currentMonth)
-
-              if (!isFutureStartDate) {
-                try {
-                  const billDueDate = new Date()
-                  // Use UTC to avoid timezone shifts
-                  billDueDate.setUTCFullYear(currentYear, currentMonth, rentalStartDay)
-                  billDueDate.setUTCHours(12, 0, 0, 0)
-
-                  await financeiroService.create({
-                    id: '',
-                    description: `Aluguel de Equipamento: ${rental.nome} (${rental.empresaNome || 'S/Empresa'})`,
-                    amount: rental.valor,
-                    dueDate: billDueDate,
-                    status: 'pending',
-                    origin: 'manual',
-                    projectId: rental.obraId || undefined,
-                    category: 'Aluguel de Equipamentos',
-                    aluguel_id: rental.id
-                  } as any)
-                  createdAny = true
-                } catch (error) {
-                  console.error(`Failed to generate monthly bill for rental ${rental.id}:`, error)
-                }
-              }
-            }
-          }
-
-          if (createdAny) {
-            await get().fetchBills()
-          }
-        } finally {
-          set({ isGeneratingRentals: false })
-        }
       },
 
       addEmployeePayment: async (payment) => {

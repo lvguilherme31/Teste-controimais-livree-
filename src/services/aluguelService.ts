@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
 import { AluguelEquipamento } from '@/types'
-import { financeiroService } from './financeiroService'
 
 export const aluguelService = {
     async getAll(): Promise<AluguelEquipamento[]> {
@@ -97,53 +96,6 @@ export const aluguelService = {
             .eq('id', id)
 
         if (error) throw error
-
-        // Sync with linked bill in Contas a Pagar
-        try {
-            // Find the linked bill
-            const { data: bills } = await (supabase.from('contas_a_pagar') as any)
-                .select('id, status, data_vencimento')
-                .eq('aluguel_id', id)
-
-            if (bills && bills.length > 0) {
-                for (const bill of bills) {
-                    // Do not retroactively update bills that are already paid
-                    // The 'status' column from DB might be 'pago' or 'paid' depending on the mapping, mapping checks 'pago'
-                    if (bill.status === 'pago' || bill.status === 'paid') continue
-
-                    const billUpdates: any = {}
-                    if (updates.nome !== undefined || updates.empresaNome !== undefined) {
-                        // Reconstruct description if needed
-                        const currentRental = await this.getById(id)
-                        if (currentRental) {
-                            billUpdates.description = `Aluguel de Equipamento: ${currentRental.nome} (${currentRental.empresaNome || 'S/Empresa'})`
-                        }
-                    }
-                    if (updates.valor !== undefined) billUpdates.amount = updates.valor
-
-                    if (updates.dataVencimento !== undefined) {
-                        // Keep the original month/year of the bill, but update the day
-                        const oldBillDate = new Date(bill.data_vencimento)
-                        const newRentalDate = updates.dataVencimento
-
-                        const newBillDate = new Date()
-                        newBillDate.setUTCFullYear(
-                            oldBillDate.getUTCFullYear(),
-                            oldBillDate.getUTCMonth(),
-                            newRentalDate.getUTCDate()
-                        )
-
-                        billUpdates.dueDate = newBillDate
-                    }
-
-                    if (updates.obraId !== undefined) billUpdates.projectId = updates.obraId
-
-                    await financeiroService.update(bill.id, billUpdates)
-                }
-            }
-        } catch (syncError) {
-            console.error('Error syncing bill update:', syncError)
-        }
     },
 
     async getById(id: string): Promise<AluguelEquipamento | null> {
@@ -174,26 +126,6 @@ export const aluguelService = {
     },
 
     async delete(id: string): Promise<void> {
-        try {
-            // 1. Get rental details for fallback cleanup of orphaned bills
-            const rental = await this.getById(id)
-            if (rental) {
-                // 2. Explicitly delete bills linked by ID
-                await (supabase.from('contas_a_pagar') as any)
-                    .delete()
-                    .eq('aluguel_id', id)
-
-                // 3. Fallback: Delete bills by exact description if they weren't linked by ID
-                const description = `Aluguel de Equipamento: ${rental.nome} (${rental.empresaNome || 'S/Empresa'})`
-                await (supabase.from('contas_a_pagar') as any)
-                    .delete()
-                    .eq('descricao', description)
-                    .is('aluguel_id', null)
-            }
-        } catch (cleanupError) {
-            console.error('Error cleaning up linked bills:', cleanupError)
-        }
-
         const { error } = await (supabase as any)
             .from('aluguel_equipamentos')
             .delete()
