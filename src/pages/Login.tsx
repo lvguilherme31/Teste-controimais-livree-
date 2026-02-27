@@ -175,7 +175,6 @@ export default function Login() {
         <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-8 md:p-10">
           <div className="flex flex-col items-center mb-8">
             <div className="bg-white rounded-2xl flex flex-col items-center justify-center mb-4 shadow-lg shadow-black/20 p-2 overflow-hidden"><img src="/logo.png" alt="TOPAZIO Empreendimentos" className="h-[72px] object-contain" /></div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">TOPAZIO</h1>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
