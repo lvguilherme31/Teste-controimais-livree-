@@ -20,7 +20,6 @@ import {
     MapPin,
     HardHat,
     CheckCircle2,
-    Clock
 } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
 import { AluguelEquipamento } from '@/types'
@@ -140,7 +139,6 @@ export default function AluguelEquipamentos() {
                             <TableHead>Equipamento</TableHead>
                             <TableHead>Valor</TableHead>
                             <TableHead>Vencimento</TableHead>
-                            <TableHead>Status</TableHead>
                             <TableHead>Obra</TableHead>
                             <TableHead>Empresa Locadora</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
@@ -195,29 +193,6 @@ export default function AluguelEquipamentos() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <button
-                                                onClick={() => handleTogglePago(item)}
-                                                title={item.pago ? 'Clique para marcar como pendente' : 'Clique para marcar como pago'}
-                                                className={cn(
-                                                    'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border',
-                                                    item.pago
-                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                                                        : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
-                                                )}
-                                            >
-                                                {item.pago ? (
-                                                    <><CheckCircle2 className="h-3.5 w-3.5" /> Pago</>
-                                                ) : (
-                                                    <><Clock className="h-3.5 w-3.5" /> Pendente</>
-                                                )}
-                                            </button>
-                                            {item.pago && item.dataPagamento && (
-                                                <div className="text-[10px] text-muted-foreground mt-0.5 pl-1">
-                                                    {format(item.dataPagamento, "dd/MM/yyyy", { locale: ptBR })}
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
                                             {obra ? (
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -262,6 +237,7 @@ export default function AluguelEquipamentos() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    title="Editar"
                                                     onClick={() => {
                                                         setSelectedAluguel(item)
                                                         setIsDialogOpen(true)
@@ -272,6 +248,16 @@ export default function AluguelEquipamentos() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    title={item.pago ? 'Marcar como pendente' : 'Marcar como pago'}
+                                                    className={item.pago ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-green-600'}
+                                                    onClick={() => handleTogglePago(item)}
+                                                >
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    title="Excluir"
                                                     className="text-red-600 hover:text-red-700"
                                                     onClick={() => setDeleteId(item.id)}
                                                 >
