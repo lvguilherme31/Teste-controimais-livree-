@@ -3,13 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { DetailRow } from '@/components/DetailRow'
 import { safeFormat } from '@/lib/utils'
-import { User, FileText, MapPin, Activity, Calendar, ShieldCheck, Key } from 'lucide-react'
+import { User, FileText, MapPin, Activity, Calendar, ShieldCheck, Key, Briefcase } from 'lucide-react'
+import { useAppStore } from '@/stores/useAppStore'
 
 interface ColaboradorGeralTabProps {
   employee: Employee
 }
 
 export function ColaboradorGeralTab({ employee }: ColaboradorGeralTabProps) {
+  const { projects } = useAppStore()
+
   const address =
     [
       employee.street,
@@ -21,6 +24,8 @@ export function ColaboradorGeralTab({ employee }: ColaboradorGeralTabProps) {
     ]
       .filter(Boolean)
       .join(', ') || 'Endereço não informado'
+
+  const currentProject = projects.find(p => p.id === employee.producaoObraId)
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -35,6 +40,8 @@ export function ColaboradorGeralTab({ employee }: ColaboradorGeralTabProps) {
           <DetailRow label="CPF" value={employee.cpf} icon={FileText} />
           <Separator />
           <DetailRow label="Endereço" value={address} icon={MapPin} />
+          <Separator />
+          <DetailRow label="Obra Atual" value={currentProject ? currentProject.name : 'Nenhuma'} icon={Briefcase} />
           <Separator />
           <DetailRow label="Status" icon={Activity}>
             <span className="capitalize font-bold text-foreground">
