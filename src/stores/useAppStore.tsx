@@ -157,6 +157,7 @@ interface AppState {
   expiringDocuments: any[]
   employeePayments: EmployeePayment[]
   generateMonthlyObligations: () => Promise<void>
+  generateMonthlyRentals: () => Promise<void>
 
   // Actions
   login: (email: string) => void
@@ -662,6 +663,9 @@ export const useAppStore = create<AppState>()(
         try {
           const data = await aluguelService.getAll()
           set({ rentals: data || [] })
+
+          // Automatically check and generate monthly bills for active rentals
+          await get().generateMonthlyRentals()
         } catch (error) {
           console.error('Error fetching rentals:', error)
         }
@@ -731,6 +735,62 @@ export const useAppStore = create<AppState>()(
         // Refresh once after batch creation
         const updatedData = await pagamentosService.getAll()
         set({ employeePayments: updatedData || [] })
+      },
+
+      generateMonthlyRentals: async () => {
+        const { rentals, bills } = get()
+        const currentDate = new Date()
+        const currentMonth = currentDate.getMonth()
+        const currentYear = currentDate.getFullYear()
+
+        let createdAny = false
+
+        for (const rental of rentals) {
+          // Check if there is a bill for this rental in the current month
+          const hasBillThisMonth = bills.some(b => {
+            if (b.aluguel_id !== rental.id) return false
+            const billDate = new Date(b.dueDate)
+            // Handle precise timezones by looking at the logical date components if needed
+            // But mapping ISO directly usually suffices for month/year checks
+            // Since dueDate from DB is string or Date, we instantiate new Date() for safety
+            return billDate.getUTCMonth() === currentMonth && billDate.getUTCFullYear() === currentYear
+          })
+
+          if (!hasBillThisMonth) {
+            // Also ensure we don't generate bills for months BEFORE the rental started
+            const rentalStartMonth = new Date(rental.dataVencimento).getUTCMonth()
+            const rentalStartYear = new Date(rental.dataVencimento).getUTCFullYear()
+            const rentalStartDay = new Date(rental.dataVencimento).getUTCDate()
+
+            if (currentYear > rentalStartYear || (currentYear === rentalStartYear && currentMonth >= rentalStartMonth)) {
+              // Generate bill for this month
+              try {
+                const billDueDate = new Date()
+                billDueDate.setUTCFullYear(currentYear, currentMonth, rentalStartDay)
+
+                await financeiroService.create({
+                  id: '', // Will be generated
+                  description: `Aluguel de Equipamento: ${rental.nome} (${rental.empresaNome || 'S/Empresa'})`,
+                  amount: rental.valor,
+                  dueDate: billDueDate,
+                  status: 'pending',
+                  origin: 'manual',
+                  projectId: rental.obraId || undefined,
+                  category: 'Aluguel de Equipamentos',
+                  aluguel_id: rental.id
+                } as any)
+                createdAny = true
+              } catch (error) {
+                console.error(`Failed to generate monthly bill for rental ${rental.id}:`, error)
+              }
+            }
+          }
+        }
+
+        if (createdAny) {
+          console.log('Generating missing monthly bills for rentals...')
+          await get().fetchBills()
+        }
       },
 
       addEmployeePayment: async (payment) => {

@@ -119,11 +119,15 @@ export const aluguelService = {
         try {
             // Find the linked bill
             const { data: bills } = await (supabase.from('contas_a_pagar') as any)
-                .select('id')
+                .select('id, status, data_vencimento')
                 .eq('aluguel_id', id)
 
             if (bills && bills.length > 0) {
                 for (const bill of bills) {
+                    // Do not retroactively update bills that are already paid
+                    // The 'status' column from DB might be 'pago' or 'paid' depending on the mapping, mapping checks 'pago'
+                    if (bill.status === 'pago' || bill.status === 'paid') continue
+
                     const billUpdates: any = {}
                     if (updates.nome !== undefined || updates.empresaNome !== undefined) {
                         // Reconstruct description if needed
@@ -133,7 +137,22 @@ export const aluguelService = {
                         }
                     }
                     if (updates.valor !== undefined) billUpdates.amount = updates.valor
-                    if (updates.dataVencimento !== undefined) billUpdates.dueDate = updates.dataVencimento
+
+                    if (updates.dataVencimento !== undefined) {
+                        // Keep the original month/year of the bill, but update the day
+                        const oldBillDate = new Date(bill.data_vencimento)
+                        const newRentalDate = updates.dataVencimento
+
+                        const newBillDate = new Date()
+                        newBillDate.setUTCFullYear(
+                            oldBillDate.getUTCFullYear(),
+                            oldBillDate.getUTCMonth(),
+                            newRentalDate.getUTCDate()
+                        )
+
+                        billUpdates.dueDate = newBillDate
+                    }
+
                     if (updates.obraId !== undefined) billUpdates.projectId = updates.obraId
 
                     await financeiroService.update(bill.id, billUpdates)
