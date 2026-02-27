@@ -37,9 +37,10 @@ export const usersService = {
             .from('usuarios')
             .select('*')
             .eq('email', email)
-            .single()
+            .eq('status', 'ativo')
+            .maybeSingle()
 
-        if (error) return null
+        if (error || !data) return null
 
         const u = data as any
         return {
@@ -58,9 +59,10 @@ export const usersService = {
             .from('usuarios')
             .select('*')
             .eq('id', id)
-            .single()
+            .eq('status', 'ativo')
+            .maybeSingle()
 
-        if (error) return null
+        if (error || !data) return null
 
         const u = data as any
         return {
