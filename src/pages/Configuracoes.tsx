@@ -454,15 +454,6 @@ export default function Configuracoes() {
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
               <div className="space-y-5 px-1">
-                {/* Email info - visible for admin and sub_user */}
-                {currentUser?.role !== 'super_admin' && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">E-mail da Conta</Label>
-                    <div className="flex items-center h-11 px-3 rounded-md border bg-muted/50 text-muted-foreground text-sm select-all">
-                      {currentUser?.email || 'Email não disponível'}
-                    </div>
-                  </div>
-                )}
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Senha Atual</Label>
                   <Input
