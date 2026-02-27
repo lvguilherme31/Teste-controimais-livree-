@@ -23,7 +23,7 @@ import { AluguelEquipamento } from '@/types'
 import { aluguelService } from '@/services/aluguelService'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { cn, getAlertStatus, formatCNPJ } from '@/lib/utils'
+import { cn, getAlertStatus, formatCNPJ, BR_STATES } from '@/lib/utils'
 
 interface AluguelFormDialogProps {
     open: boolean
@@ -32,10 +32,7 @@ interface AluguelFormDialogProps {
     onSuccess: () => void
 }
 
-const ESTADOS = [
-    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
-    'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-]
+
 
 export function AluguelFormDialog({
     open,
@@ -261,7 +258,7 @@ export function AluguelFormDialog({
                                             <SelectValue placeholder="UF" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {ESTADOS.map((uf) => (
+                                            {BR_STATES.map((uf) => (
                                                 <SelectItem key={uf} value={uf}>
                                                     {uf}
                                                 </SelectItem>

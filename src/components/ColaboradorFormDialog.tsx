@@ -24,7 +24,7 @@ import { MoneyInput } from '@/components/ui/money-input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Upload, FileCheck, Calendar, User, Camera, FileText, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, BR_STATES } from '@/lib/utils'
 import { colaboradoresService } from '@/services/colaboradoresService'
 import { supabase } from '@/lib/supabase/client'
 import { pagamentosService } from '@/services/pagamentosService'
@@ -415,7 +415,16 @@ export function ColaboradorFormDialog({
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label className="text-slate-600 font-medium">UF</Label>
-                                                        <Input value={data.state || ''} onChange={(e) => setData({ ...data, state: e.target.value })} maxLength={2} className="uppercase bg-white border-slate-200" />
+                                                        <Select value={data.state || ''} onValueChange={(v) => setData({ ...data, state: v })}>
+                                                            <SelectTrigger className="bg-white border-slate-200">
+                                                                <SelectValue placeholder="UF" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {BR_STATES.map((uf) => (
+                                                                    <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
                                                     </div>
                                                 </div>
                                             </div>
