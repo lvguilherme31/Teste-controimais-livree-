@@ -307,6 +307,8 @@ export interface AluguelEquipamento {
   empresaCidade?: string | null
   empresaEstado?: string | null
   empresaTelefone?: string | null
+  pago?: boolean
+  dataPagamento?: Date | null
   createdAt?: string
 }
 

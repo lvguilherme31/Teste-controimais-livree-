@@ -27,6 +27,8 @@ export const aluguelService = {
             empresaEstado: item.empresa_estado,
             empresaTelefone: item.empresa_telefone,
             empresaCnpj: item.empresa_cnpj,
+            pago: item.pago ?? false,
+            dataPagamento: item.data_pagamento ? new Date(item.data_pagamento) : null,
             createdAt: item.created_at,
         }))
     },
@@ -69,6 +71,8 @@ export const aluguelService = {
             empresaEstado: item.empresa_estado,
             empresaTelefone: item.empresa_telefone,
             empresaCnpj: item.empresa_cnpj,
+            pago: item.pago ?? false,
+            dataPagamento: item.data_pagamento ? new Date(item.data_pagamento) : null,
             createdAt: item.created_at,
         }
     },
@@ -89,6 +93,10 @@ export const aluguelService = {
         if (updates.empresaEstado !== undefined) dbUpdates.empresa_estado = updates.empresaEstado
         if (updates.empresaTelefone !== undefined) dbUpdates.empresa_telefone = updates.empresaTelefone
         if (updates.empresaCnpj !== undefined) dbUpdates.empresa_cnpj = updates.empresaCnpj
+        if (updates.pago !== undefined) dbUpdates.pago = updates.pago
+        if (updates.dataPagamento !== undefined) {
+            dbUpdates.data_pagamento = updates.dataPagamento ? updates.dataPagamento.toISOString().split('T')[0] : null
+        }
 
         const { error } = await (supabase as any)
             .from('aluguel_equipamentos')
@@ -121,6 +129,8 @@ export const aluguelService = {
             empresaEstado: data.empresa_estado,
             empresaTelefone: data.empresa_telefone,
             empresaCnpj: data.empresa_cnpj,
+            pago: data.pago ?? false,
+            dataPagamento: data.data_pagamento ? new Date(data.data_pagamento) : null,
             createdAt: data.created_at,
         }
     },

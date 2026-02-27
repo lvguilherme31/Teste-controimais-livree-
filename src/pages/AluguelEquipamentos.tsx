@@ -18,7 +18,9 @@ import {
     Building2,
     Phone,
     MapPin,
-    HardHat
+    HardHat,
+    CheckCircle2,
+    Clock
 } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
 import { AluguelEquipamento } from '@/types'
@@ -40,7 +42,7 @@ import {
 import { toast } from 'sonner'
 
 export default function AluguelEquipamentos() {
-    const { projects: obras, rentals: alugueis, fetchRentals, deleteRental } = useAppStore()
+    const { projects: obras, rentals: alugueis, fetchRentals, deleteRental, updateRental } = useAppStore()
     const [search, setSearch] = React.useState('')
     const [isDialogOpen, setIsDialogOpen] = React.useState(false)
     const [selectedAluguel, setSelectedAluguel] = React.useState<AluguelEquipamento | null>(null)
@@ -74,6 +76,20 @@ export default function AluguelEquipamentos() {
             toast.error('Erro ao remover aluguel')
         } finally {
             setDeleteId(null)
+        }
+    }
+
+    const handleTogglePago = async (item: AluguelEquipamento) => {
+        try {
+            const novoPago = !item.pago
+            await updateRental(item.id, {
+                pago: novoPago,
+                dataPagamento: novoPago ? new Date() : null,
+            })
+            toast.success(novoPago ? 'Aluguel marcado como pago!' : 'Aluguel marcado como pendente')
+        } catch (error) {
+            console.error(error)
+            toast.error('Erro ao atualizar status de pagamento')
         }
     }
 
@@ -124,6 +140,7 @@ export default function AluguelEquipamentos() {
                             <TableHead>Equipamento</TableHead>
                             <TableHead>Valor</TableHead>
                             <TableHead>Vencimento</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Obra</TableHead>
                             <TableHead>Empresa Locadora</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
@@ -169,13 +186,36 @@ export default function AluguelEquipamentos() {
                                                 </div>
                                                 {(() => {
                                                     const status = getAlertStatus(item.dataVencimento)
-                                                    return status.severity !== 'ok' && (
+                                                    return status.severity !== 'ok' && !item.pago && (
                                                         <span className={cn("text-[10px] font-bold uppercase tracking-wider", status.color)}>
                                                             {status.label}
                                                         </span>
                                                     )
                                                 })()}
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <button
+                                                onClick={() => handleTogglePago(item)}
+                                                title={item.pago ? 'Clique para marcar como pendente' : 'Clique para marcar como pago'}
+                                                className={cn(
+                                                    'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer border',
+                                                    item.pago
+                                                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                                        : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+                                                )}
+                                            >
+                                                {item.pago ? (
+                                                    <><CheckCircle2 className="h-3.5 w-3.5" /> Pago</>
+                                                ) : (
+                                                    <><Clock className="h-3.5 w-3.5" /> Pendente</>
+                                                )}
+                                            </button>
+                                            {item.pago && item.dataPagamento && (
+                                                <div className="text-[10px] text-muted-foreground mt-0.5 pl-1">
+                                                    {format(item.dataPagamento, "dd/MM/yyyy", { locale: ptBR })}
+                                                </div>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             {obra ? (
