@@ -499,8 +499,8 @@ export const useAppStore = create<AppState>()(
 
       generateMonthlyObligations: async () => {
         const { employees } = get()
-        const currentMonth = new Date().getMonth()
-        const currentYear = new Date().getFullYear()
+        const now = new Date()
+        const mesReferencia = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
         for (const emp of employees) {
           // Check if already has payment for this month
@@ -508,22 +508,19 @@ export const useAppStore = create<AppState>()(
             .from('pagamentos_colaboradores') as any)
             .select('id')
             .eq('colaborador_id', emp.id)
-            .eq('mes', currentMonth + 1)
-            .eq('ano', currentYear)
+            .eq('mes_referencia', mesReferencia)
             .maybeSingle()
 
           if (existing) continue
 
           // Create obligation
           try {
-            const payment = {
-              colaborador_id: emp.id,
-              valor_base: emp.salary || 0,
-              mes: currentMonth + 1,
-              ano: currentYear,
-              status: 'pendente'
-            }
-            await pagamentosService.create(payment as any)
+            await pagamentosService.create({
+              colaboradorId: emp.id,
+              mesReferencia,
+              valorAPagar: emp.salary || 0,
+              status: 'pendente',
+            } as any)
           } catch (error) {
             console.error(`Failed to generate obligation for employee ${emp.id}:`, error)
           }
