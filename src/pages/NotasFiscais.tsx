@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/useAppStore'
 import { Invoice } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
@@ -372,13 +373,12 @@ export default function NotasFiscais() {
                 <Label>
                   Valor <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  type="number"
-                  value={currentInvoice.value || ''}
-                  onChange={(e) =>
+                <MoneyInput
+                  value={currentInvoice.value || 0}
+                  onChange={(val) =>
                     setCurrentInvoice({
                       ...currentInvoice,
-                      value: Number(e.target.value),
+                      value: val,
                     })
                   }
                 />
