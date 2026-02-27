@@ -2,7 +2,7 @@
   "name": "constroimais",
   "description": "CRM de Engenharia Civil e Gestão de Obras",
   "private": true,
-  "version": "0.0.118",
+  "version": "0.0.119",
   "type": "module",
   "scripts": {
     "start": "vite dev",
