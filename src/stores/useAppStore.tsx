@@ -156,6 +156,7 @@ interface AppState {
   loadingTools: boolean
   expiringDocuments: any[]
   employeePayments: EmployeePayment[]
+  isGeneratingRentals: boolean
   generateMonthlyObligations: () => Promise<void>
   generateMonthlyRentals: () => Promise<void>
 
@@ -258,6 +259,7 @@ export const useAppStore = create<AppState>()(
       loadingTools: false,
       expiringDocuments: [],
       employeePayments: [],
+      isGeneratingRentals: false,
 
       setCurrentUser: (user) => set({ currentUser: user }),
       setIsAuthenticated: (val) => set({ isAuthenticated: val }),
@@ -738,60 +740,69 @@ export const useAppStore = create<AppState>()(
       },
 
       generateMonthlyRentals: async () => {
-        // Refresh bills FIRST to avoid creating duplicates based on stale local state
-        await get().fetchBills()
+        // Mutex to prevent multiple parallel runs
+        if (get().isGeneratingRentals) return
+        set({ isGeneratingRentals: true })
 
-        const { rentals, bills } = get()
-        const currentDate = new Date()
-        const currentMonth = currentDate.getUTCMonth()
-        const currentYear = currentDate.getUTCFullYear()
+        try {
+          // Refresh bills FIRST to avoid creating duplicates based on stale local state
+          await get().fetchBills()
 
-        let createdAny = false
+          const { rentals, bills } = get()
+          const currentDate = new Date()
+          const currentMonth = currentDate.getUTCMonth()
+          const currentYear = currentDate.getUTCFullYear()
 
-        for (const rental of rentals) {
-          // Check if there is already a bill for this rental in the current month
-          const hasBillThisMonth = (bills || []).some(b => {
-            if (b.aluguel_id !== rental.id) return false
-            const billDate = new Date(b.dueDate)
-            return billDate.getUTCMonth() === currentMonth && billDate.getUTCFullYear() === currentYear
-          })
+          let createdAny = false
 
-          if (!hasBillThisMonth) {
-            // Also ensure we don't generate bills for months BEFORE the rental started
-            const rentalStartMonth = new Date(rental.dataVencimento).getUTCMonth()
-            const rentalStartYear = new Date(rental.dataVencimento).getUTCFullYear()
-            const rentalStartDay = new Date(rental.dataVencimento).getUTCDate()
+          for (const rental of rentals) {
+            // Check if there is already a bill for this rental in the current month
+            const hasBillThisMonth = (bills || []).some(b => {
+              if (b.aluguel_id !== rental.id) return false
+              const billDate = new Date(b.dueDate)
+              return billDate.getUTCMonth() === currentMonth && billDate.getUTCFullYear() === currentYear
+            })
 
-            if (currentYear > rentalStartYear || (currentYear === rentalStartYear && currentMonth >= rentalStartMonth)) {
-              // Generate bill for this month
-              try {
-                const billDueDate = new Date()
-                // IMPORTANT: Use UTC to avoid timezone shifts
-                billDueDate.setUTCFullYear(currentYear, currentMonth, rentalStartDay)
-                billDueDate.setUTCHours(12, 0, 0, 0) // Middle of the day for safety
+            if (!hasBillThisMonth) {
+              const rentalDate = new Date(rental.dataVencimento)
+              const rentalStartMonth = rentalDate.getUTCMonth()
+              const rentalStartYear = rentalDate.getUTCFullYear()
+              const rentalStartDay = rentalDate.getUTCDate()
 
-                await financeiroService.create({
-                  id: '', // Will be generated
-                  description: `Aluguel de Equipamento: ${rental.nome} (${rental.empresaNome || 'S/Empresa'})`,
-                  amount: rental.valor,
-                  dueDate: billDueDate,
-                  status: 'pending',
-                  origin: 'manual',
-                  projectId: rental.obraId || undefined,
-                  category: 'Aluguel de Equipamentos',
-                  aluguel_id: rental.id
-                } as any)
-                createdAny = true
-              } catch (error) {
-                console.error(`Failed to generate monthly bill for rental ${rental.id}:`, error)
+              // Only generate if the rental has already started (or starts this month)
+              const isFutureStartDate = rentalStartYear > currentYear || (rentalStartYear === currentYear && rentalStartMonth > currentMonth)
+
+              if (!isFutureStartDate) {
+                try {
+                  const billDueDate = new Date()
+                  // Use UTC to avoid timezone shifts
+                  billDueDate.setUTCFullYear(currentYear, currentMonth, rentalStartDay)
+                  billDueDate.setUTCHours(12, 0, 0, 0)
+
+                  await financeiroService.create({
+                    id: '',
+                    description: `Aluguel de Equipamento: ${rental.nome} (${rental.empresaNome || 'S/Empresa'})`,
+                    amount: rental.valor,
+                    dueDate: billDueDate,
+                    status: 'pending',
+                    origin: 'manual',
+                    projectId: rental.obraId || undefined,
+                    category: 'Aluguel de Equipamentos',
+                    aluguel_id: rental.id
+                  } as any)
+                  createdAny = true
+                } catch (error) {
+                  console.error(`Failed to generate monthly bill for rental ${rental.id}:`, error)
+                }
               }
             }
           }
-        }
 
-        if (createdAny) {
-          console.log('Generating missing monthly bills for rentals...')
-          await get().fetchBills()
+          if (createdAny) {
+            await get().fetchBills()
+          }
+        } finally {
+          set({ isGeneratingRentals: false })
         }
       },
 
