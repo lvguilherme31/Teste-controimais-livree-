@@ -231,18 +231,23 @@ export function ColaboradorFormDialog({
             const employeeId = savedEmployee.id
             const uploadPromises = Object.entries(docUploads).map(async ([typeId, upload]) => {
                 const isCustom = typeId.startsWith('custom_')
-                const typeLabel = isCustom ? upload.customLabel : typeId
 
                 // Only skip if nothing changed/uploaded
                 if (!upload.file && !upload.expiry && upload.description === undefined && !upload.customLabel) return
 
+                // For custom docs: always save as 'outros' enum value; user's text goes into description
+                const dbType = isCustom ? 'outros' : typeId
+                const dbDescription = isCustom
+                    ? (upload.customLabel || upload.description || '')
+                    : upload.description
+
                 await colaboradoresService.upsertDocument(
                     employeeId,
-                    typeLabel || typeId,
+                    dbType,
                     upload.file,
                     upload.expiry,
                     employeeToEdit?.documents?.[typeId]?.id,
-                    upload.description
+                    dbDescription
                 )
             })
 
@@ -769,22 +774,13 @@ export function ColaboradorFormDialog({
                                                         <div key={id} className="flex flex-col gap-4 p-4 border rounded-lg bg-white hover:bg-slate-50 transition-colors">
                                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                                 <div className="flex-1 w-full md:max-w-[250px]">
-                                                                    <Label className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Tipo do Documento</Label>
-                                                                    <Select
-                                                                        value={docUploads[id]?.customLabel ?? (existingDoc?.type || '')}
-                                                                        onValueChange={(v) => handleCustomLabelChange(id, v)}
-                                                                    >
-                                                                        <SelectTrigger className="h-9 font-semibold">
-                                                                            <SelectValue placeholder="Selecione o tipo..." />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {DOC_TYPES.map((dt) => (
-                                                                                <SelectItem key={dt.id} value={dt.id}>
-                                                                                    {dt.label}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
+                                                                    <Label className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Nome do Documento</Label>
+                                                                    <Input
+                                                                        placeholder="Ex: Certificado, Treinamento..."
+                                                                        value={docUploads[id]?.customLabel ?? (existingDoc?.description || '')}
+                                                                        onChange={(e) => handleCustomLabelChange(id, e.target.value)}
+                                                                        className="h-9 font-semibold"
+                                                                    />
                                                                 </div>
 
                                                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1 justify-end">
