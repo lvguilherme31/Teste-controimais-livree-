@@ -556,7 +556,7 @@ export function ColaboradorFormDialog({
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label className="text-orange-700 text-[10px] font-bold uppercase transition-colors group-hover:text-orange-900">Senha</Label>
-                                                    <Input value={data.carteira_digital_senha || ''} onChange={(e) => setData({ ...data, carteira_digital_senha: e.target.value })} type="password" className="bg-white border-orange-200/50 focus-visible:ring-orange-500" />
+                                                    <Input value={data.carteira_digital_senha || ''} onChange={(e) => setData({ ...data, carteira_digital_senha: e.target.value })} className="bg-white border-orange-200/50 focus-visible:ring-orange-500" />
                                                 </div>
                                             </div>
                                         </div>
