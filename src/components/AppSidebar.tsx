@@ -26,6 +26,7 @@ import {
   Contact,
   Wrench,
   Banknote,
+  Clock,
 } from 'lucide-react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/useAppStore'
@@ -99,6 +100,12 @@ export function AppSidebar() {
       url: '/ferramentas',
       icon: Wrench,
       access: 'ferramentas',
+    },
+    {
+      title: 'Adicional Horas Extras',
+      url: '/horas-extras',
+      icon: Clock,
+      access: 'colaboradores',
     },
   ]
 

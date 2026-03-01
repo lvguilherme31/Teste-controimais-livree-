@@ -22,6 +22,7 @@ import Configuracoes from './pages/Configuracoes'
 import Alojamentos from './pages/Alojamentos'
 import Prestadores from './pages/Prestadores'
 import AlojamentoDetails from './pages/AlojamentoDetails'
+import AdicionalHorasExtras from './pages/AdicionalHorasExtras'
 import Ferramentas from './pages/Ferramentas'
 import AluguelEquipamentos from './pages/AluguelEquipamentos'
 import PrimeiroAcesso from './pages/PrimeiroAcesso'
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/financeiro/pagamentos" element={<ProtectedRoute requiredPermission="pagamento_colaboradores"><PagamentoFuncionarios /></ProtectedRoute>} />
               <Route path="/colaboradores" element={<ProtectedRoute requiredPermission="colaboradores"><Colaboradores /></ProtectedRoute>} />
               <Route path="/colaboradores/:id" element={<ProtectedRoute requiredPermission="colaboradores"><ColaboradorDetails /></ProtectedRoute>} />
+              <Route path="/horas-extras" element={<ProtectedRoute requiredPermission="colaboradores"><AdicionalHorasExtras /></ProtectedRoute>} />
               <Route path="/obras" element={<ProtectedRoute requiredPermission="obras"><Obras /></ProtectedRoute>} />
               <Route path="/obras/:id" element={<ProtectedRoute requiredPermission="obras"><ObraDetails /></ProtectedRoute>} />
               <Route path="/alojamentos" element={<ProtectedRoute requiredPermission="alojamento"><Alojamentos /></ProtectedRoute>} />

@@ -332,3 +332,13 @@ export interface Payslip {
   nomeArquivo: string
   createdAt?: string
 }
+
+export interface AdicionalHorasExtras {
+  id: string
+  colaborador_id: string
+  mes_ano: string // 'YYYY-MM'
+  dia: number // 1 to 31
+  horas: string | null
+  observacao: string | null
+  created_at?: string
+}
