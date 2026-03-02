@@ -561,8 +561,8 @@ export default function Financeiro() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Fornecedor / Boleto</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Fornecedor</TableHead>
+              <TableHead>Nº do Boleto</TableHead>
               <TableHead>Vencimento</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Status</TableHead>
@@ -577,13 +577,6 @@ export default function Financeiro() {
                   <TableCell className="font-medium">
                     <div className="flex flex-col gap-1">
                       <span className="text-sm">{bill.description}</span>
-                      {bill.barcode && (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[10px] font-mono font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-                            {bill.barcode}
-                          </span>
-                        </div>
-                      )}
                       <div className="flex items-center gap-2 mt-0.5">
                         {bill.origin === 'alojamento' && (
                           <>
@@ -611,7 +604,15 @@ export default function Financeiro() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{bill.category || 'Geral'}</TableCell>
+                  <TableCell>
+                    {bill.barcode ? (
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[10px] font-mono font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 break-all max-w-[200px] xl:max-w-xs">
+                        {bill.barcode}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs italic">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span>
