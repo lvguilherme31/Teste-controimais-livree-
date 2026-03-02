@@ -44,6 +44,24 @@ import { useToast } from '@/hooks/use-toast'
 import { getAlertStatus } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 
+// Boleto Linha Digitável Mask
+// Format: AAAAA.BBBBB CCCCC.CCCCCC DDDDD.DDDDDD E FFFFFFFFFFFFFFFF
+const applyBoletoMask = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 47)
+  let result = ''
+  for (let i = 0; i < digits.length; i++) {
+    if (i === 5) result += '.'
+    else if (i === 10) result += ' '
+    else if (i === 15) result += '.'
+    else if (i === 21) result += ' '
+    else if (i === 26) result += '.'
+    else if (i === 32) result += ' '
+    else if (i === 33) result += ' '
+    result += digits[i]
+  }
+  return result
+}
+
 export default function Financeiro() {
   const { bills, addBill, updateBill, deleteBill, projects, fetchBills } = useAppStore()
   const { toast } = useToast()
@@ -353,10 +371,18 @@ export default function Financeiro() {
                 <Input
                   value={newBill.barcode || ''}
                   onChange={(e) =>
-                    setNewBill({ ...newBill, barcode: e.target.value })
+                    setNewBill({ ...newBill, barcode: applyBoletoMask(e.target.value) })
                   }
-                  placeholder="Código de barras ou número do boleto"
+                  placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                  className="font-mono text-sm"
+                  maxLength={54}
                 />
+                {newBill.barcode && (
+                  <div className="bg-slate-50 border rounded-md px-3 py-2">
+                    <p className="text-[10px] text-slate-500 mb-0.5 uppercase font-semibold tracking-wider">Linha digitável</p>
+                    <p className="font-mono text-sm font-semibold tracking-widest text-slate-800 break-all">{newBill.barcode}</p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
@@ -535,7 +561,7 @@ export default function Financeiro() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Descrição</TableHead>
+              <TableHead>Fornecedor / Boleto</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Vencimento</TableHead>
               <TableHead>Valor</TableHead>
@@ -549,9 +575,16 @@ export default function Financeiro() {
               return (
                 <TableRow key={bill.id} className="group">
                   <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span>{bill.description}</span>
-                      <div className="flex items-center gap-2 mt-1">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm">{bill.description}</span>
+                      {bill.barcode && (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[10px] font-mono font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                            {bill.barcode}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
                         {bill.origin === 'alojamento' && (
                           <>
                             <Badge
@@ -712,11 +745,19 @@ export default function Financeiro() {
                   onChange={(e) =>
                     setEditModal({
                       ...editModal,
-                      bill: { ...editModal.bill!, barcode: e.target.value },
+                      bill: { ...editModal.bill!, barcode: applyBoletoMask(e.target.value) },
                     })
                   }
-                  placeholder="Código de barras ou número do boleto"
+                  placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                  className="font-mono text-sm"
+                  maxLength={54}
                 />
+                {editModal.bill.barcode && (
+                  <div className="bg-slate-50 border rounded-md px-3 py-2">
+                    <p className="text-[10px] text-slate-500 mb-0.5 uppercase font-semibold tracking-wider">Linha digitável</p>
+                    <p className="font-mono text-sm font-semibold tracking-widest text-slate-800 break-all">{editModal.bill.barcode}</p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
