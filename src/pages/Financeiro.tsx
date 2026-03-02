@@ -391,8 +391,8 @@ export default function Financeiro() {
                   <Input
                     type="date"
                     value={
-                      newBill.dueDate && !isNaN(new Date(newBill.dueDate).getTime())
-                        ? format(new Date(newBill.dueDate), 'yyyy-MM-dd')
+                      newBill.dueDate
+                        ? safeFormat(newBill.dueDate, 'yyyy-MM-dd')
                         : ''
                     }
                     onChange={(e) =>
@@ -558,7 +558,7 @@ export default function Financeiro() {
           </TableHeader>
           <TableBody>
             {filteredBills.map((bill) => {
-              const statusAlert = getAlertStatus(new Date(bill.dueDate))
+              const statusAlert = getAlertStatus(bill.dueDate)
               return (
                 <TableRow key={bill.id} className="group">
                   <TableCell className="font-medium">
@@ -784,8 +784,8 @@ export default function Financeiro() {
                   <Input
                     type="date"
                     value={
-                      editModal.bill.dueDate && !isNaN(new Date(editModal.bill.dueDate).getTime())
-                        ? format(new Date(editModal.bill.dueDate), 'yyyy-MM-dd')
+                      editModal.bill.dueDate
+                        ? safeFormat(editModal.bill.dueDate, 'yyyy-MM-dd')
                         : ''
                     }
                     onChange={(e) =>
@@ -898,8 +898,8 @@ export default function Financeiro() {
                       <Input
                         type="date"
                         value={
-                          editModal.bill.paidDate && !isNaN(new Date(editModal.bill.paidDate).getTime())
-                            ? format(new Date(editModal.bill.paidDate), 'yyyy-MM-dd')
+                          editModal.bill.paidDate
+                            ? safeFormat(editModal.bill.paidDate, 'yyyy-MM-dd')
                             : ''
                         }
                         onChange={(e) =>

@@ -57,10 +57,29 @@ export const BR_STATES = [
   'TO',
 ]
 
-export function isValidDate(date: any): boolean {
-  if (!date) return false
+export function parseSafeDate(date: any): Date | null {
+  if (!date) return null
+
+  // If it's already a Date object
+  if (date instanceof Date) {
+    return isValid(date) ? date : null
+  }
+
+  // If it's a string, we need to prevent UTC shifts for YYYY-MM-DD strings
+  if (typeof date === 'string') {
+    // If it's exactly YYYY-MM-DD, or starts with it and has no time
+    if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const d = new Date(`${date}T12:00:00`)
+      return isValid(d) ? d : null
+    }
+  }
+
   const d = new Date(date)
-  return isValid(d)
+  return isValid(d) ? d : null
+}
+
+export function isValidDate(date: any): boolean {
+  return parseSafeDate(date) !== null
 }
 
 export function safeFormat(
@@ -68,14 +87,17 @@ export function safeFormat(
   formatStr: string,
   options?: any,
 ): string {
-  if (!isValidDate(date)) return 'N/A'
-  return format(new Date(date), formatStr, options)
+  const d = parseSafeDate(date)
+  if (!d) return 'N/A'
+  return format(d, formatStr, options)
 }
 
 export function getAlertStatus(
   date: Date | string | number | null | undefined,
 ): AlertStatus {
-  if (!isValidDate(date)) {
+  const d = parseSafeDate(date)
+
+  if (!d) {
     return {
       severity: 'neutral',
       label: 'N/A',
@@ -85,8 +107,6 @@ export function getAlertStatus(
     }
   }
 
-  // We know date is valid here
-  const d = new Date(date!)
   const today = startOfDay(new Date())
   const target = startOfDay(d)
   const diff = differenceInDays(target, today)
