@@ -55,6 +55,7 @@ export default function PagamentoFuncionarios() {
 
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
+    const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
 
     // Modals
     const [isEditOpen, setIsEditOpen] = useState(false)
@@ -66,14 +67,26 @@ export default function PagamentoFuncionarios() {
     // filter active employees
     const activeEmployees = employees.filter(e => e.status === 'ativo')
 
-    const filteredPayments = employeePayments.map(p => ({
-        employee: employees.find(e => e.id === p.colaboradorId),
-        payment: p
-    })).filter(item => {
-        if (!item.employee) return false
+    // Mapeia todos os funcionários ativos garantindo APENAS 1 linha por funcionário por mês.
+    const filteredPayments = activeEmployees.map(emp => {
+        // Encontra o pagamento referente a ESTE funcionário e ESTE mês selecionado
+        const payment = employeePayments.find(p => p.colaboradorId === emp.id && p.mesReferencia === selectedMonth)
+        return {
+            employee: emp,
+            payment: payment
+        }
+    }).filter(item => {
         const matchesSearch = item.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.employee.cpf?.includes(searchTerm)
-        const matchesStatus = filterStatus === 'all' || (item.payment?.status === filterStatus)
+
+        let matchesStatus = true
+        if (filterStatus !== 'all') {
+            if (filterStatus === 'pendente') {
+                matchesStatus = !item.payment || item.payment.status === 'pendente'
+            } else {
+                matchesStatus = item.payment?.status === filterStatus
+            }
+        }
         return matchesSearch && matchesStatus
     })
 
@@ -139,6 +152,34 @@ export default function PagamentoFuncionarios() {
                 dataPagamento: new Date()
             })
             toast({ title: 'Sucesso', description: 'Pagamento marcado como pago.' })
+
+            // Auto-Generate Next Month
+            const payment = employeePayments.find(p => p.id === id)
+            if (payment) {
+                const currentMonthDate = new Date(`${payment.mesReferencia}-01T00:00:00`)
+                currentMonthDate.setMonth(currentMonthDate.getMonth() + 1)
+                const nextMonthStr = format(currentMonthDate, 'yyyy-MM')
+
+                const emp = employees.find(e => e.id === payment.colaboradorId)
+                if (emp && emp.status === 'ativo') {
+                    // Check if already exists
+                    const exists = employeePayments.some(p => p.colaboradorId === emp.id && p.mesReferencia === nextMonthStr)
+                    if (!exists) {
+                        try {
+                            await addEmployeePayment({
+                                colaboradorId: emp.id,
+                                mesReferencia: nextMonthStr,
+                                valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
+                                status: 'pendente',
+                                observacoes: 'Gerado automaticamente'
+                            } as any)
+                        } catch (e) {
+                            console.error("Failed to generate next month payment", e)
+                        }
+                    }
+                }
+            }
+
         } catch (error) {
             toast({ title: 'Erro', description: 'Falha ao atualizar status.', variant: 'destructive' })
         }
@@ -207,6 +248,18 @@ export default function PagamentoFuncionarios() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+
+                {/* Month Filter */}
+                <div className="flex items-center gap-2">
+                    <Label className="text-slate-500 text-sm whitespace-nowrap">Mês Ref.</Label>
+                    <Input
+                        type="month"
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="w-[180px]"
+                    />
+                </div>
+
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Status" />
@@ -270,7 +323,7 @@ export default function PagamentoFuncionarios() {
                                         <Badge variant="secondary">NÃO LANÇADO</Badge>
                                     )}
                                 </TableCell>
-                                <TableCell>{item.payment?.mesReferencia || '-'}</TableCell>
+                                <TableCell>{item.payment?.mesReferencia || selectedMonth}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2 text-[#000000]">
                                         {item.payment && item.payment.status === 'pendente' && (
