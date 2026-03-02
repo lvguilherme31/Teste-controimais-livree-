@@ -41,7 +41,7 @@ import {
   Edit,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { getAlertStatus } from '@/lib/utils'
+import { getAlertStatus, safeFormat } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 
 // No Mask Function Needed Anymore
@@ -386,13 +386,18 @@ export default function Financeiro() {
                   <Label>Vencimento</Label>
                   <Input
                     type="date"
-                    value={newBill.dueDate ? format(new Date(newBill.dueDate), 'yyyy-MM-dd') : ''}
+                    value={
+                      newBill.dueDate && !isNaN(new Date(newBill.dueDate).getTime())
+                        ? format(new Date(newBill.dueDate), 'yyyy-MM-dd')
+                        : ''
+                    }
                     onChange={(e) =>
                       setNewBill({
                         ...newBill,
-                        dueDate: new Date(e.target.value + 'T12:00:00'),
+                        dueDate: e.target.value ? new Date(e.target.value + 'T12:00:00') : undefined,
                       })
                     }
+                    required
                   />
                 </div>
               </div>
@@ -594,7 +599,7 @@ export default function Financeiro() {
                   <TableCell>
                     <div className="flex flex-col">
                       <span>
-                        {format(new Date(bill.dueDate), 'dd/MM/yyyy')}
+                        {safeFormat(bill.dueDate, 'dd/MM/yyyy')}
                       </span>
                       {bill.status !== 'paid' &&
                         statusAlert.severity !== 'ok' && (
@@ -765,16 +770,21 @@ export default function Financeiro() {
                   <Label>Vencimento</Label>
                   <Input
                     type="date"
-                    value={format(new Date(editModal.bill.dueDate), 'yyyy-MM-dd')}
+                    value={
+                      editModal.bill.dueDate && !isNaN(new Date(editModal.bill.dueDate).getTime())
+                        ? format(new Date(editModal.bill.dueDate), 'yyyy-MM-dd')
+                        : ''
+                    }
                     onChange={(e) =>
                       setEditModal({
                         ...editModal,
                         bill: {
                           ...editModal.bill!,
-                          dueDate: new Date(e.target.value),
+                          dueDate: e.target.value ? new Date(e.target.value + 'T12:00:00') : new Date(),
                         },
                       })
                     }
+                    required
                   />
                 </div>
               </div>
@@ -875,7 +885,7 @@ export default function Financeiro() {
                       <Input
                         type="date"
                         value={
-                          editModal.bill.paidDate
+                          editModal.bill.paidDate && !isNaN(new Date(editModal.bill.paidDate).getTime())
                             ? format(new Date(editModal.bill.paidDate), 'yyyy-MM-dd')
                             : ''
                         }
@@ -884,10 +894,13 @@ export default function Financeiro() {
                             ...editModal,
                             bill: {
                               ...editModal.bill!,
-                              paidDate: new Date(e.target.value),
+                              paidDate: e.target.value
+                                ? new Date(e.target.value + 'T12:00:00')
+                                : undefined,
                             },
                           })
                         }
+                        required
                       />
                     </div>
                   </>
