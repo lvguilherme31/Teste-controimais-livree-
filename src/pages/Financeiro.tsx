@@ -73,6 +73,10 @@ export default function Financeiro() {
     open: boolean
     bill: Bill | null
   }>({ open: false, bill: null })
+  const [detailsModal, setDetailsModal] = useState<{
+    open: boolean
+    bill: Bill | null
+  }>({ open: false, bill: null })
   const [payDate, setPayDate] = useState(format(new Date(), 'yyyy-MM-dd'))
 
   // Form State
@@ -641,6 +645,15 @@ export default function Financeiro() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDetailsModal({ open: true, bill })}
+                        title="Ver Detalhes"
+                        className="hover:text-blue-500"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
