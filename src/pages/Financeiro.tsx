@@ -44,29 +44,7 @@ import { useToast } from '@/hooks/use-toast'
 import { getAlertStatus } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 
-// Boleto Linha Digitável Mask
-// Format: AAAAA.BBBBB CCCCC.CCCCCC DDDDD.DDDDDD E FFFFFFFFFFFFFFFF
-// Allows alphanumeric custom IDs to pass through unmasked
-const applyBoletoMask = (value: string): string => {
-  // If value contains letters, assume it's a custom ID and return as is
-  if (value.match(/[a-zA-Z]/)) {
-    return value.slice(0, 54)
-  }
-
-  const digits = value.replace(/\D/g, '').slice(0, 47)
-  let result = ''
-  for (let i = 0; i < digits.length; i++) {
-    if (i === 5) result += '.'
-    else if (i === 10) result += ' '
-    else if (i === 15) result += '.'
-    else if (i === 21) result += ' '
-    else if (i === 26) result += '.'
-    else if (i === 32) result += ' '
-    else if (i === 33) result += ' '
-    result += digits[i]
-  }
-  return result || value // fallback to value if empty digits but had symbols
-}
+// No Mask Function Needed Anymore
 
 export default function Financeiro() {
   const { bills, addBill, updateBill, deleteBill, projects, fetchBills } = useAppStore()
@@ -377,18 +355,12 @@ export default function Financeiro() {
                 <Input
                   value={newBill.barcode || ''}
                   onChange={(e) =>
-                    setNewBill({ ...newBill, barcode: applyBoletoMask(e.target.value) })
+                    setNewBill({ ...newBill, barcode: e.target.value })
                   }
-                  placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                  placeholder="Código de barras ou identificador"
                   className="font-mono text-sm"
-                  maxLength={54}
+                  maxLength={100}
                 />
-                {newBill.barcode && (
-                  <div className="bg-slate-50 border rounded-md px-3 py-2">
-                    <p className="text-[10px] text-slate-500 mb-0.5 uppercase font-semibold tracking-wider">Linha digitável</p>
-                    <p className="font-mono text-sm font-semibold tracking-widest text-slate-800 break-all">{newBill.barcode}</p>
-                  </div>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
@@ -752,19 +724,13 @@ export default function Financeiro() {
                   onChange={(e) =>
                     setEditModal({
                       ...editModal,
-                      bill: { ...editModal.bill!, barcode: applyBoletoMask(e.target.value) },
+                      bill: { ...editModal.bill!, barcode: e.target.value },
                     })
                   }
-                  placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                  placeholder="Código de barras ou identificador"
                   className="font-mono text-sm"
-                  maxLength={54}
+                  maxLength={100}
                 />
-                {editModal.bill.barcode && (
-                  <div className="bg-slate-50 border rounded-md px-3 py-2">
-                    <p className="text-[10px] text-slate-500 mb-0.5 uppercase font-semibold tracking-wider">Linha digitável</p>
-                    <p className="font-mono text-sm font-semibold tracking-widest text-slate-800 break-all">{editModal.bill.barcode}</p>
-                  </div>
-                )}
               </div>
               <div className="space-y-2">
                 <Label>Fornecedor</Label>
