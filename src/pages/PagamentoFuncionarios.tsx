@@ -36,6 +36,7 @@ import {
     FileText,
     Eye,
     Check,
+    Pencil,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -293,7 +294,7 @@ export default function PagamentoFuncionarios() {
                                 </TableCell>
                             </TableRow>
                         ) : filteredPayments.map((item) => (
-                            <TableRow key={item.payment.id}>
+                            <TableRow key={item.employee.id}>
                                 <TableCell>
                                     <div>
                                         <p className="font-medium text-slate-900">{item.employee.name}</p>
@@ -332,13 +333,13 @@ export default function PagamentoFuncionarios() {
                                             </Button>
                                         )}
                                         <Button variant="ghost" size="icon" onClick={() => handleEditPayment(item.employee, item.payment)}>
-                                            <EditIcon className="h-4 w-4 text-blue-600" />
+                                            <Pencil className="h-4 w-4 text-blue-600" />
                                         </Button>
                                         <Button variant="ghost" size="icon" onClick={() => handleOpenPayslips(item.employee.id)}>
                                             <FileText className="h-4 w-4 text-slate-600" />
                                         </Button>
                                         {item.payment && (
-                                            <Button variant="ghost" size="icon" onClick={() => handleDeletePayment(item.payment.id)}>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDeletePayment(item.payment!.id)}>
                                                 <Trash2 className="h-4 w-4 text-red-600" />
                                             </Button>
                                         )}
