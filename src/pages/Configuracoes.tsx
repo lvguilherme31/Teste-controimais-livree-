@@ -62,6 +62,7 @@ export default function Configuracoes() {
       veiculos: false,
       fichario_funcoes: false,
       ferramentas: false,
+      adicional_horas_extras: false,
       financeiro: false,
       contas_pagar: false,
       pagamento_colaboradores: false,
@@ -119,6 +120,7 @@ export default function Configuracoes() {
           veiculos: false,
           fichario_funcoes: false,
           ferramentas: false,
+          adicional_horas_extras: false,
           financeiro: false,
           contas_pagar: false,
           pagamento_colaboradores: false,
@@ -304,6 +306,7 @@ export default function Configuracoes() {
                                   { id: 'veiculos', label: '🚗 Frota e Veículos', key: 'veiculos' },
                                   { id: 'fichario_funcoes', label: '📇 Fichário de Funções', key: 'fichario_funcoes' },
                                   { id: 'ferramentas', label: '🔧 Ferramentas', key: 'ferramentas' },
+                                  { id: 'adicional_horas_extras', label: '⏱️ Adicional Horas Extras', key: 'adicional_horas_extras' },
                                 ].map((item) => (
                                   <div key={item.id} className="flex items-center space-x-3 group">
                                     <Checkbox

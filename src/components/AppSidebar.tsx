@@ -105,7 +105,7 @@ export function AppSidebar() {
       title: 'Adicional Horas Extras',
       url: '/horas-extras',
       icon: Clock,
-      access: 'colaboradores',
+      access: 'adicional_horas_extras',
     },
   ]
 

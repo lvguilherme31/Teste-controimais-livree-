@@ -16,6 +16,7 @@ export interface User {
     veiculos: boolean
     fichario_funcoes: boolean
     ferramentas: boolean
+    adicional_horas_extras: boolean
     financeiro: boolean // Acesso geral financeiro
     contas_pagar: boolean
     pagamento_colaboradores: boolean

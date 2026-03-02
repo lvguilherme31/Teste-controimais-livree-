@@ -184,6 +184,7 @@ export const useAppStore = create<AppState>()(
                   configuracoes: true,
                   fichario_funcoes: true,
                   ferramentas: true,
+                  adicional_horas_extras: true,
                   contas_pagar: true,
                   pagamento_colaboradores: true,
                   notas_fiscais: true,

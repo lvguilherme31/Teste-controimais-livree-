@@ -54,7 +54,7 @@ const App = () => (
               <Route path="/financeiro/pagamentos" element={<ProtectedRoute requiredPermission="pagamento_colaboradores"><PagamentoFuncionarios /></ProtectedRoute>} />
               <Route path="/colaboradores" element={<ProtectedRoute requiredPermission="colaboradores"><Colaboradores /></ProtectedRoute>} />
               <Route path="/colaboradores/:id" element={<ProtectedRoute requiredPermission="colaboradores"><ColaboradorDetails /></ProtectedRoute>} />
-              <Route path="/horas-extras" element={<ProtectedRoute requiredPermission="colaboradores"><AdicionalHorasExtras /></ProtectedRoute>} />
+              <Route path="/horas-extras" element={<ProtectedRoute requiredPermission="adicional_horas_extras"><AdicionalHorasExtras /></ProtectedRoute>} />
               <Route path="/obras" element={<ProtectedRoute requiredPermission="obras"><Obras /></ProtectedRoute>} />
               <Route path="/obras/:id" element={<ProtectedRoute requiredPermission="obras"><ObraDetails /></ProtectedRoute>} />
               <Route path="/alojamentos" element={<ProtectedRoute requiredPermission="alojamento"><Alojamentos /></ProtectedRoute>} />
