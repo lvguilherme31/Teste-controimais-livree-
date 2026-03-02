@@ -24,7 +24,7 @@ import { MoneyInput } from '@/components/ui/money-input'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Upload, FileCheck, Calendar, User, Camera, FileText, Plus } from 'lucide-react'
-import { cn, BR_STATES } from '@/lib/utils'
+import { cn, BR_STATES, safeFormat, parseSafeDate } from '@/lib/utils'
 import { colaboradoresService } from '@/services/colaboradoresService'
 import { supabase } from '@/lib/supabase/client'
 import { pagamentosService } from '@/services/pagamentosService'
@@ -529,17 +529,41 @@ export function ColaboradorFormDialog({
 
                                         <div className="space-y-2">
                                             <Label className="text-slate-600 font-medium">Data de Admissão</Label>
-                                            <DatePicker date={data.admissionDate} setDate={(d) => setData({ ...data, admissionDate: d || new Date() })} />
+                                            <Input
+                                                type="date"
+                                                value={data.admissionDate ? safeFormat(new Date(data.admissionDate), 'yyyy-MM-dd') : ''}
+                                                onChange={(e) => {
+                                                    const newDate = e.target.value ? parseSafeDate(e.target.value) : new Date();
+                                                    setData({ ...data, admissionDate: newDate });
+                                                }}
+                                                className="bg-white border-slate-200"
+                                            />
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label className="text-slate-600 font-medium">Data de Demissão</Label>
-                                            <DatePicker date={data.dismissalDate} setDate={(d) => setData({ ...data, dismissalDate: d })} />
+                                            <Input
+                                                type="date"
+                                                value={data.dismissalDate ? safeFormat(new Date(data.dismissalDate), 'yyyy-MM-dd') : ''}
+                                                onChange={(e) => {
+                                                    const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
+                                                    setData({ ...data, dismissalDate: newDate });
+                                                }}
+                                                className="bg-white border-slate-200"
+                                            />
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label className="text-slate-600 font-medium">Vencimento de Férias</Label>
-                                            <DatePicker date={data.vacationDueDate} setDate={(d) => setData({ ...data, vacationDueDate: d })} />
+                                            <Input
+                                                type="date"
+                                                value={data.vacationDueDate ? safeFormat(new Date(data.vacationDueDate), 'yyyy-MM-dd') : ''}
+                                                onChange={(e) => {
+                                                    const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
+                                                    setData({ ...data, vacationDueDate: newDate });
+                                                }}
+                                                className="bg-white border-slate-200"
+                                            />
                                         </div>
                                     </div>
 
@@ -607,7 +631,15 @@ export function ColaboradorFormDialog({
                                                         <div className="space-y-4">
                                                             <div className="space-y-2">
                                                                 <Label className="text-blue-700 text-xs font-bold">Data Ref.</Label>
-                                                                <DatePicker date={data.producaoData} setDate={(d) => setData({ ...data, producaoData: d })} />
+                                                                <Input
+                                                                    type="date"
+                                                                    value={data.producaoData ? safeFormat(new Date(data.producaoData), 'yyyy-MM-dd') : ''}
+                                                                    onChange={(e) => {
+                                                                        const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
+                                                                        setData({ ...data, producaoData: newDate });
+                                                                    }}
+                                                                    className="bg-white border-blue-200"
+                                                                />
                                                             </div>
                                                             <div className="space-y-2">
                                                                 <Label className="text-blue-700 text-xs font-bold">Obra</Label>
@@ -722,9 +754,14 @@ export function ColaboradorFormDialog({
                                                         <div className="flex items-center gap-2">
                                                             <Calendar className="h-4 w-4 text-slate-400" />
                                                             <div className="w-[140px]">
-                                                                <DatePicker
-                                                                    date={docUploads[type.id]?.expiry || (existingDoc?.expiry ? new Date(existingDoc.expiry) : undefined)}
-                                                                    setDate={(d) => handleExpiryChange(type.id, d)}
+                                                                <Input
+                                                                    type="date"
+                                                                    value={(docUploads[type.id]?.expiry || existingDoc?.expiry) ? safeFormat(new Date(docUploads[type.id]?.expiry || existingDoc!.expiry), 'yyyy-MM-dd') : ''}
+                                                                    onChange={(e) => {
+                                                                        const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
+                                                                        handleExpiryChange(type.id, newDate);
+                                                                    }}
+                                                                    className="h-9 text-xs"
                                                                 />
                                                             </div>
                                                         </div>
@@ -789,9 +826,14 @@ export function ColaboradorFormDialog({
                                                                         <div className="flex items-center gap-2">
                                                                             <Calendar className="h-4 w-4 text-slate-400" />
                                                                             <div className="w-[140px]">
-                                                                                <DatePicker
-                                                                                    date={docUploads[id]?.expiry || (existingDoc?.expiry ? new Date(existingDoc.expiry) : undefined)}
-                                                                                    setDate={(d) => handleExpiryChange(id, d)}
+                                                                                <Input
+                                                                                    type="date"
+                                                                                    value={(docUploads[id]?.expiry || existingDoc?.expiry) ? safeFormat(new Date(docUploads[id]?.expiry || existingDoc!.expiry), 'yyyy-MM-dd') : ''}
+                                                                                    onChange={(e) => {
+                                                                                        const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
+                                                                                        handleExpiryChange(id, newDate);
+                                                                                    }}
+                                                                                    className="h-9 text-xs"
                                                                                 />
                                                                             </div>
                                                                         </div>
