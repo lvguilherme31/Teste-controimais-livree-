@@ -81,6 +81,7 @@ export default function Financeiro() {
     status: 'pending',
     origin: 'manual',
     category: 'Geral',
+    dueDate: new Date(),
   })
   const [newBillFile, setNewBillFile] = useState<File | null>(null)
 
@@ -202,7 +203,18 @@ export default function Financeiro() {
   }
 
   const handleSave = async () => {
-    if (!newBill.description || !newBill.amount || !newBill.dueDate) return
+    if (!newBill.description) {
+      toast({ title: 'Campo obrigatório', description: 'Informe o nome do fornecedor.', variant: 'destructive' })
+      return
+    }
+    if (!newBill.amount || newBill.amount <= 0) {
+      toast({ title: 'Campo obrigatório', description: 'Informe o valor do boleto.', variant: 'destructive' })
+      return
+    }
+    if (!newBill.dueDate) {
+      toast({ title: 'Campo obrigatório', description: 'Informe a data de vencimento.', variant: 'destructive' })
+      return
+    }
 
     try {
       const generatedId = crypto.randomUUID()
@@ -228,6 +240,7 @@ export default function Financeiro() {
         amount: 0,
         origin: 'manual',
         category: 'Geral',
+        dueDate: new Date(),
       })
       setNewBillFile(null)
       toast({ title: 'Sucesso', description: 'Boleto adicionado com sucesso.' })
@@ -369,10 +382,11 @@ export default function Financeiro() {
                   <Label>Vencimento</Label>
                   <Input
                     type="date"
+                    value={newBill.dueDate ? format(new Date(newBill.dueDate), 'yyyy-MM-dd') : ''}
                     onChange={(e) =>
                       setNewBill({
                         ...newBill,
-                        dueDate: new Date(e.target.value),
+                        dueDate: new Date(e.target.value + 'T12:00:00'),
                       })
                     }
                   />
