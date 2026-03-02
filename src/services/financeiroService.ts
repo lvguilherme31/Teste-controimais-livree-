@@ -3,6 +3,8 @@
 import { supabase } from '@/lib/supabase/client'
 import { Bill } from '@/types'
 
+const BUCKET_NAME = 'crm-docs'
+
 // Map English status (used in app) to Portuguese (used in DB)
 const statusToDb = (status: string): string => {
     const map: Record<string, string> = {
@@ -155,5 +157,33 @@ export const financeiroService = {
             .eq('id', id)
 
         if (error) throw error
+    },
+
+    async uploadBoleto(id: string, file: File): Promise<string> {
+        const fileExt = file.name.split('.').pop()
+        const fileName = `boletos/${id}/${crypto.randomUUID()}.${fileExt}`
+
+        const fileBuffer = await file.arrayBuffer()
+        const { error: uploadError } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(fileName, fileBuffer, {
+                contentType: file.type,
+                upsert: false
+            })
+
+        if (uploadError) throw uploadError
+
+        const { data: { publicUrl } } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(fileName)
+
+        return publicUrl
+    },
+
+    async deleteBoletoFile(urlArquivo: string): Promise<void> {
+        const path = urlArquivo.split(`${BUCKET_NAME}/`).pop()
+        if (path) {
+            await supabase.storage.from(BUCKET_NAME).remove([path])
+        }
     }
 }

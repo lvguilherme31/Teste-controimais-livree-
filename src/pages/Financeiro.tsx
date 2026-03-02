@@ -76,11 +76,13 @@ export default function Financeiro() {
   // Form State
   const [newBill, setNewBill] = useState<Partial<Bill>>({
     description: '',
+    barcode: '',
     amount: 0,
     status: 'pending',
     origin: 'manual',
     category: 'Geral',
   })
+  const [newBillFile, setNewBillFile] = useState<File | null>(null)
 
   const filteredBills = bills
     .filter((bill) => {
@@ -199,24 +201,40 @@ export default function Financeiro() {
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!newBill.description || !newBill.amount || !newBill.dueDate) return
 
-    addBill({
-      ...newBill,
-      id: crypto.randomUUID(),
-      status: 'pending',
-      origin: 'manual',
-    } as Bill)
+    try {
+      const generatedId = crypto.randomUUID()
+      let uploadedUrl = undefined
 
-    setIsAddOpen(false)
-    setNewBill({
-      description: '',
-      amount: 0,
-      origin: 'manual',
-      category: 'Geral',
-    })
-    toast({ title: 'Sucesso', description: 'Boleto adicionado com sucesso.' })
+      if (newBillFile) {
+        const { financeiroService } = await import('@/services/financeiroService')
+        uploadedUrl = await financeiroService.uploadBoleto(generatedId, newBillFile)
+      }
+
+      await addBill({
+        ...newBill,
+        id: generatedId,
+        status: 'pending',
+        origin: 'manual',
+        attachmentUrl: uploadedUrl
+      } as Bill)
+
+      setIsAddOpen(false)
+      setNewBill({
+        description: '',
+        barcode: '',
+        amount: 0,
+        origin: 'manual',
+        category: 'Geral',
+      })
+      setNewBillFile(null)
+      toast({ title: 'Sucesso', description: 'Boleto adicionado com sucesso.' })
+    } catch (e: any) {
+      console.error(e)
+      toast({ title: 'Erro', description: 'Falha ao adicionar: ' + e.message, variant: 'destructive' })
+    }
   }
 
   const handleConfirmPay = async () => {
@@ -318,12 +336,23 @@ export default function Financeiro() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label>Nº Do Boleto</Label>
+                <Input
+                  value={newBill.barcode || ''}
+                  onChange={(e) =>
+                    setNewBill({ ...newBill, barcode: e.target.value })
+                  }
+                  placeholder="Código de barras ou número do boleto"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fornecedor</Label>
                 <Input
                   value={newBill.description}
                   onChange={(e) =>
                     setNewBill({ ...newBill, description: e.target.value })
                   }
+                  placeholder="Nome do fornecedor ou descrição da conta"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -433,7 +462,11 @@ export default function Financeiro() {
               </div>
               <div className="space-y-2">
                 <Label>Arquivo (Boleto/Fatura)</Label>
-                <Input type="file" />
+                <Input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  onChange={(e) => setNewBillFile(e.target.files?.[0] || null)}
+                />
               </div>
               <Button onClick={handleSave} className="w-full">
                 Salvar
