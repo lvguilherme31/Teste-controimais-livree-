@@ -931,8 +931,130 @@ export default function Financeiro() {
             </Button>
             <Button onClick={handleEditSave}>Salvar</Button>
           </DialogFooter>
-        </DialogContent >
-      </Dialog >
-    </div >
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Modal */}
+      {detailsModal.bill && (
+        <Dialog
+          open={detailsModal.open}
+          onOpenChange={(open) =>
+            setDetailsModal({ ...detailsModal, open })
+          }
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Conta</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Fornecedor</span>
+                  <p className="font-semibold text-sm">{detailsModal.bill.description}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Valor</span>
+                  <p className="font-bold text-sm">
+                    R$ {detailsModal.bill.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-sm font-medium text-muted-foreground">Nº do Boleto / Identificador</span>
+                <p className="font-mono text-sm break-all bg-slate-50 border p-2 rounded-md">
+                  {detailsModal.bill.barcode || <span className="text-muted-foreground italic">Não informado</span>}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Vencimento</span>
+                  <p className="text-sm">
+                    {safeFormat(detailsModal.bill.dueDate, 'dd/MM/yyyy')}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Status</span>
+                  <div>
+                    <Badge
+                      variant={
+                        detailsModal.bill.status === 'paid'
+                          ? 'default'
+                          : detailsModal.bill.status === 'overdue'
+                            ? 'destructive'
+                            : 'outline'
+                      }
+                      className={
+                        detailsModal.bill.status === 'paid'
+                          ? 'bg-success hover:bg-success/80'
+                          : ''
+                      }
+                    >
+                      {detailsModal.bill.status === 'paid'
+                        ? 'Pago'
+                        : detailsModal.bill.status === 'overdue'
+                          ? 'Vencido'
+                          : 'Pendente'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Data de Pagamento</span>
+                  <p className="text-sm">
+                    {detailsModal.bill.paidDate ? safeFormat(detailsModal.bill.paidDate, 'dd/MM/yyyy') : '-'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Categoria</span>
+                  <p className="text-sm">{detailsModal.bill.category || 'Geral'}</p>
+                </div>
+              </div>
+
+              {(detailsModal.bill.projectId || detailsModal.bill.accommodationId) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {detailsModal.bill.projectId && (
+                    <div className="space-y-1">
+                      <span className="text-sm font-medium text-muted-foreground">Obra Relacionada</span>
+                      <p className="text-sm">
+                        {projects.find((p) => p.id === detailsModal.bill?.projectId)?.name || 'Desconhecida'}
+                      </p>
+                    </div>
+                  )}
+                  {detailsModal.bill.accommodationId && (
+                    <div className="space-y-1">
+                      <span className="text-sm font-medium text-muted-foreground">Alojamento Relacionado</span>
+                      <p className="text-sm">{detailsModal.bill.accommodationName || 'Desconhecido'}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-2 pt-2 border-t">
+                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  Anexo / Comprovante
+                </span>
+                {detailsModal.bill.attachmentUrl ? (
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="w-full" asChild>
+                      <a href={detailsModal.bill.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                        <span className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" /> Visualizar Anexo
+                        </span>
+                      </a>
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Nenhum anexo disponível.</p>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
   )
 }
