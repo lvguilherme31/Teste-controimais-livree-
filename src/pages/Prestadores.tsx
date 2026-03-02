@@ -57,7 +57,9 @@ export default function Prestadores() {
         fetchServiceProviders,
         addServiceProvider,
         updateServiceProvider,
-        deleteServiceProvider
+        deleteServiceProvider,
+        employees,
+        fetchEmployees,
     } = useAppStore()
 
     const { toast } = useToast()
@@ -86,13 +88,35 @@ export default function Prestadores() {
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true)
-            await fetchServiceProviders()
+            await Promise.all([fetchServiceProviders(), fetchEmployees()])
             setIsLoading(false)
         }
         loadData()
-    }, [fetchServiceProviders])
+    }, [fetchServiceProviders, fetchEmployees])
 
-    const filteredProviders = serviceProviders.filter((p) => {
+    // 1. Combine serviceProviders and employees
+    const unifiedProviders = [
+        ...serviceProviders.map((p) => ({
+            ...p,
+            tipo: 'prestador' as const,
+        })),
+        ...employees.map((e) => ({
+            id: e.id,
+            nome: e.name,
+            telefone_1: e.phone,
+            telefone_2: '',
+            rua: e.street,
+            numero: e.number,
+            cidade: e.city,
+            estado: e.state,
+            funcao: e.role,
+            created_at: '',
+            tipo: 'colaborador' as const,
+        })),
+    ]
+
+    // 2. Filter the combined list
+    const filteredProviders = unifiedProviders.filter((p) => {
         const search = searchTerm.toLowerCase()
         return (
             (p.nome?.toLowerCase() || '').includes(search) ||
@@ -213,7 +237,7 @@ export default function Prestadores() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{serviceProviders.length}</div>
+                        <div className="text-2xl font-bold">{unifiedProviders.length}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -284,8 +308,13 @@ export default function Prestadores() {
                         {filteredProviders.map((provider) => (
                             <TableRow key={provider.id} className="hover:bg-muted/30 transition-colors group">
                                 <TableCell className="pl-6 py-4">
-                                    <span className="font-semibold text-foreground text-base">
+                                    <span className="font-semibold text-foreground text-base flex flex-col items-start gap-1">
                                         {provider.nome}
+                                        {provider.tipo === 'colaborador' && (
+                                            <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] uppercase font-bold tracking-wider">
+                                                Colaborador
+                                            </span>
+                                        )}
                                     </span>
                                 </TableCell>
                                 <TableCell className="py-4 font-medium text-foreground/80 lowercase italic first-letter:uppercase">
@@ -311,29 +340,33 @@ export default function Prestadores() {
                                     ) : '-'}
                                 </TableCell>
                                 <TableCell className="text-right pr-6 py-4">
-                                    <div className="flex justify-end items-center gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleEdit(provider)}
-                                            className="text-muted-foreground hover:text-orange-600 hover:bg-orange-50"
-                                            title="Editar"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => {
-                                                setDeleteId(provider.id)
-                                                setIsDeleteOpen(true)
-                                            }}
-                                            className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                                            title="Excluir"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                                    {provider.tipo === 'prestador' ? (
+                                        <div className="flex justify-end items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleEdit(provider)}
+                                                className="text-muted-foreground hover:text-orange-600 hover:bg-orange-50"
+                                                title="Editar"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => {
+                                                    setDeleteId(provider.id)
+                                                    setIsDeleteOpen(true)
+                                                }}
+                                                className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                                title="Excluir"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground italic mr-4">Via Colaboradores</span>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
