@@ -46,7 +46,13 @@ import { supabase } from '@/lib/supabase/client'
 
 // Boleto Linha Digitável Mask
 // Format: AAAAA.BBBBB CCCCC.CCCCCC DDDDD.DDDDDD E FFFFFFFFFFFFFFFF
+// Allows alphanumeric custom IDs to pass through unmasked
 const applyBoletoMask = (value: string): string => {
+  // If value contains letters, assume it's a custom ID and return as is
+  if (value.match(/[a-zA-Z]/)) {
+    return value.slice(0, 54)
+  }
+
   const digits = value.replace(/\D/g, '').slice(0, 47)
   let result = ''
   for (let i = 0; i < digits.length; i++) {
@@ -59,7 +65,7 @@ const applyBoletoMask = (value: string): string => {
     else if (i === 33) result += ' '
     result += digits[i]
   }
-  return result
+  return result || value // fallback to value if empty digits but had symbols
 }
 
 export default function Financeiro() {
