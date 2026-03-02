@@ -706,7 +706,20 @@ export default function Financeiro() {
           {editModal.bill && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Descrição</Label>
+                <Label>Nº Do Boleto</Label>
+                <Input
+                  value={editModal.bill.barcode || ''}
+                  onChange={(e) =>
+                    setEditModal({
+                      ...editModal,
+                      bill: { ...editModal.bill!, barcode: e.target.value },
+                    })
+                  }
+                  placeholder="Código de barras ou número do boleto"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fornecedor</Label>
                 <Input
                   value={editModal.bill.description}
                   onChange={(e) =>
@@ -715,6 +728,7 @@ export default function Financeiro() {
                       bill: { ...editModal.bill!, description: e.target.value },
                     })
                   }
+                  placeholder="Nome do fornecedor ou descrição da conta"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
