@@ -66,38 +66,27 @@ export default function FirstAccess() {
 
         setLoading(true)
         try {
-            // 1. SignUp with Supabase Auth
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        name: invite.name,
-                    }
-                }
-            })
+            // 1. Call the Edge Function to handle everything securely bypassing email limits
+            const { data, error: functionError } = await supabase.functions.invoke('activate-account', {
+                body: { email, password }
+            });
 
-            if (authError) {
-                // If user already exists in Auth but maybe not in public.usuarios correctly?
-                // Or if simple duplicate.
-                throw authError
+            if (functionError) {
+                console.error("Function Error:", functionError);
+                throw new Error(functionError.message || 'Falha ao ativar a conta.');
             }
 
-            const user = authData.user
-            if (!user) throw new Error('Falha ao criar usuário de autenticação.')
-
-            // 2. Complete First Access (Move to public.usuarios and delete invite)
-            await usersService.completeFirstAccess(user.id, email, invite)
+            if (data?.error) {
+                throw new Error(data.error);
+            }
 
             toast({
                 title: 'Cadastro Concluído!',
-                description: 'Seu acesso foi configurado com sucesso. Entrando...'
+                description: 'Seu acesso foi ativado com sucesso. Redirecionando para o login...'
             })
 
-            // 3. Auto Login is often handled by Supabase client automatically storing session.
-            // We can just navigate to home.
-            // A slight delay to ensure session propagation if needed, or just go.
-            setTimeout(() => navigate('/'), 1000)
+            // 3. Navigate to login
+            setTimeout(() => navigate('/login'), 1500)
 
         } catch (error: any) {
             console.error(error)

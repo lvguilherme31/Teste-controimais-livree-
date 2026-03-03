@@ -158,20 +158,5 @@ export const usersService = {
         return (data as unknown) as UserInvite | null
     },
 
-    async completeFirstAccess(id: string, email: string, invite: UserInvite) {
-        // 1. Insert into public.usuarios
-        const { error: insertError } = await supabase.from('usuarios').insert({
-            id: id, // Link to auth.users id
-            email: email,
-            nome: invite.name,
-            role: invite.role,
-            permissions: invite.permissions as any,
-            status: 'ativo',
-        })
 
-        if (insertError) throw insertError
-
-        // 2. Delete invite
-        await this.deleteInvite(email)
-    },
 }
