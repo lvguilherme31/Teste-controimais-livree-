@@ -27,6 +27,15 @@ const statusFromDb = (status: string): string => {
     return map[status] || status
 }
 
+// Ensure pure YYYY-MM-DD from DB parses to noon local time, avoiding UTC timezone shifts
+const parseLocalDate = (dateStr: string | null | undefined): Date | undefined => {
+    if (!dateStr) return undefined
+    if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return new Date(`${dateStr}T12:00:00`)
+    }
+    return new Date(dateStr)
+}
+
 export const financeiroService = {
     async getAll(): Promise<Bill[]> {
         const { data, error } = await supabase
@@ -48,11 +57,11 @@ export const financeiroService = {
             id: item.id,
             description: item.descricao,
             amount: Number(item.valor),
-            dueDate: new Date(item.data_vencimento),
+            dueDate: parseLocalDate(item.data_vencimento) || new Date(),
             status: (statusFromDb(item.status) || 'pending') as any,
             barcode: item.codigo_barras,
             attachmentUrl: item.url_boleto,
-            paidDate: item.data_pagamento ? new Date(item.data_pagamento) : undefined,
+            paidDate: parseLocalDate(item.data_pagamento),
             origin: item.alojamento_id ? 'alojamento' : 'manual', // Simple logic for now
             category: item.categoria?.nome || item.categoria_nome || 'Geral',
             projectId: item.obra_id,
