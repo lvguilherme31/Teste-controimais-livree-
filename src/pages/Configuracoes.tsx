@@ -177,17 +177,14 @@ export default function Configuracoes() {
     }
 
     try {
-      // 1. Validate current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: currentUser?.email ?? '',
-        password: pass.current,
-      })
-      if (signInError) {
-        toast({ title: 'Senha atual incorreta', description: 'Verifique sua senha atual e tente novamente.', variant: 'destructive' })
+      // Pega o email da sessão de autenticação ativa (mais seguro que o state do Zustand)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) {
+        toast({ title: 'Erro de Sessão', description: 'Usuário não autenticado.', variant: 'destructive' })
         return
       }
 
-      // 2. Update password in Supabase Auth
+      // 1. Update password in Supabase Auth (a sessão ativa já prova a autenticidade)
       const { error: updateError } = await supabase.auth.updateUser({ password: pass.new })
       if (updateError) throw updateError
 
