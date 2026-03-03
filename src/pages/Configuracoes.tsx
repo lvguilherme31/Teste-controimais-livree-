@@ -184,14 +184,31 @@ export default function Configuracoes() {
         return
       }
 
-      // 1. Update password in Supabase Auth (a sessão ativa já prova a autenticidade)
+      // 1. Validar a senha atual (Segurança)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pass.current,
+      })
+
+      if (signInError) {
+        toast({ title: 'Senha atual incorreta', description: 'A senha atual informada não confere.', variant: 'destructive' })
+        return
+      }
+
+      // 2. Atualizar a senha no Supabase Auth
       const { error: updateError } = await supabase.auth.updateUser({ password: pass.new })
       if (updateError) throw updateError
 
       toast({ title: 'Senha Atualizada', description: 'Sua senha foi alterada com sucesso no sistema.' })
       setPass({ current: '', new: '', confirm: '' })
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message || 'Falha ao alterar a senha.', variant: 'destructive' })
+      let msg = error.message || 'Falha ao alterar a senha.'
+      if (msg.includes('different from the old password')) {
+        msg = 'A nova senha deve ser diferente da senha atual.'
+      } else if (msg.includes('should be at least')) {
+        msg = 'A senha deve ter pelo menos 6 caracteres.'
+      }
+      toast({ title: 'Erro', description: msg, variant: 'destructive' })
     }
   }
 
