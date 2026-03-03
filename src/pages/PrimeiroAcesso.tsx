@@ -80,26 +80,17 @@ export default function PrimeiroAcesso() {
 
         setLoading(true)
         try {
-            // SignUp in Supabase Auth with redirect to production URL
-            const { data: authData, error: signUpError } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    emailRedirectTo: 'https://teste-controimais-livree.vercel.app/login',
-                },
-            })
+            // Call Edge Function to create user and bypass email confirmation
+            const { data, error: invokeError } = await supabase.functions.invoke('activate-account', {
+                body: { email, password }
+            });
 
-            if (signUpError) throw signUpError
-            if (!authData.user) throw new Error('Falha ao criar usuário na autenticação.')
-
-            // Complete First Access: insert into usuarios and remove invite
-            if (invite) {
-                await usersService.completeFirstAccess(authData.user.id, email, invite)
-            }
+            if (invokeError) throw invokeError;
+            if (data?.error) throw new Error(data.error);
 
             toast({
                 title: 'Conta Ativada!',
-                description: 'Verifique seu e-mail para confirmar o acesso e depois faça login.',
+                description: 'Sua conta foi ativada com sucesso. Você já pode fazer login.',
             })
             navigate('/login')
         } catch (error: any) {
