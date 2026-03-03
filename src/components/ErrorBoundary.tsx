@@ -26,8 +26,15 @@ export class ErrorBoundary extends Component<Props, State> {
         console.error('Uncaught error:', error, errorInfo);
 
         // Se for um erro de "Failed to fetch dynamically imported module" (ChunkLoadError),
-        // é 99% de certeza que é problema de cache antigo tentando carregar arquivo deletado
-        // após uma nova publicação (deploy).
+        // é problema de cache antigo tentando carregar arquivo deletado após um deploy.
+        const isChunkError = error?.message?.toLowerCase().includes('fetch') ||
+            error?.name === 'ChunkLoadError' ||
+            error?.message?.toLowerCase().includes('dynamically imported module');
+
+        if (isChunkError) {
+            // Auto-reload ignorando o cache para resolver silenciosamente para o usuário
+            window.location.reload();
+        }
     }
 
     private handleReload = () => {
@@ -41,6 +48,21 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.state.error?.name === 'ChunkLoadError' ||
                 this.state.error?.message?.toLowerCase().includes('dynamically imported module');
 
+            // Se for erro de chunk, a página será recarregada automaticamente (veja componentDidCatch). 
+            // Mostramos apenas uma pequena mensagem de "Atualizando..." enquanto isso ocorre.
+            if (isChunkError) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans text-slate-800">
+                        <div className="text-center space-y-4">
+                            <RefreshCw className="h-8 w-8 text-orange-500 animate-spin mx-auto" />
+                            <p className="text-sm font-medium text-slate-500 animate-pulse">
+                                Atualizando sistema para a versão mais recente...
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
                 <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans text-slate-800">
                     <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center space-y-6">
@@ -52,12 +74,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
                         <div className="space-y-2">
                             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                                {isChunkError ? 'Nova versão disponível!' : 'Oops, ocorreu um erro inesperado.'}
+                                Oops, ocorreu um erro inesperado.
                             </h1>
                             <p className="text-slate-500 text-sm leading-relaxed">
-                                {isChunkError
-                                    ? 'Detectamos que uma atualização recente do sistema está causando conflito de cache com seu navegador. Por favor, recarregue a página para obter a versão mais recente.'
-                                    : 'Desculpe, algo não ocorreu como o esperado. Tente recarregar a página para voltar ao normal.'}
+                                Desculpe, algo não ocorreu como o esperado na interface. Tente recarregar a página para voltar ao normal.
                             </p>
                         </div>
 
