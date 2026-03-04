@@ -106,7 +106,7 @@ export default function PagamentoFuncionarios() {
             ...(payment || {
                 colaboradorId: emp.id,
                 mesReferencia: format(new Date(), 'yyyy-MM'),
-                valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
+                valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
                 status: 'pendente',
             }),
             employee: emp
@@ -117,7 +117,7 @@ export default function PagamentoFuncionarios() {
     const handleSavePayment = async (data: any) => {
         if (!selectedPayment) return
         try {
-            const { file, tipoRemuneracao, producaoData, producaoObraId, producaoValorTotal, ...paymentData } = data
+            const { file, tipoRemuneracao, producaoData, producaoObraId, producaoValorTotal, salary, ...paymentData } = data
 
             // Sync employee configuration edits from this modal back to the Employee table
             if (paymentData.colaboradorId) {
@@ -128,7 +128,8 @@ export default function PagamentoFuncionarios() {
                         tipoRemuneracao: 'production',
                         producaoData: producaoData,
                         producaoObraId: producaoObraId,
-                        producaoValorTotal: paymentData.valorAPagar
+                        producaoValorTotal: producaoValorTotal,
+                        salary: salary
                     }
                 } else {
                     salaryUpdate = {
@@ -192,7 +193,7 @@ export default function PagamentoFuncionarios() {
                             await addEmployeePayment({
                                 colaboradorId: emp.id,
                                 mesReferencia: nextMonthStr,
-                                valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
+                                valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
                                 status: 'pendente',
                                 observacoes: 'Gerado automaticamente'
                             } as any)
@@ -334,7 +335,7 @@ export default function PagamentoFuncionarios() {
                                 <TableCell className="font-semibold text-slate-700">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                         item.payment?.valorAPagar ??
-                                        (item.employee.tipoRemuneracao === 'production' ? (item.employee.producaoValorTotal || 0) : (item.employee.salary || 0))
+                                        (item.employee.tipoRemuneracao === 'production' ? ((item.employee.salary || 0) + (item.employee.producaoValorTotal || 0)) : (item.employee.salary || 0))
                                     )}
                                 </TableCell>
                                 <TableCell>

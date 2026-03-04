@@ -571,7 +571,7 @@ export const useAppStore = create<AppState>()(
             await pagamentosService.create({
               colaboradorId: emp.id,
               mesReferencia,
-              valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
+              valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
               status: 'pendente',
             } as any)
           } catch (error) {

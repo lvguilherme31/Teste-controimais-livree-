@@ -48,6 +48,7 @@ export function PagamentoFormDialog({
         producaoData: undefined,
         producaoObraId: '',
         producaoValorTotal: 0,
+        salary: 0,
     })
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
     const [file, setFile] = useState<File | null>(null)
@@ -66,6 +67,7 @@ export function PagamentoFormDialog({
                 tipoRemuneracao: emp?.tipoRemuneracao || 'fixed',
                 producaoObraId: emp?.producaoObraId || '',
                 producaoValorTotal: emp?.producaoValorTotal || 0,
+                salary: emp?.salary || 0,
                 producaoData: emp?.producaoData ? new Date(emp.producaoData) : undefined,
                 id: initialData.id
             })
@@ -77,6 +79,8 @@ export function PagamentoFormDialog({
                 status: 'pendente',
                 observacoes: '',
                 tipoRemuneracao: 'fixed',
+                producaoValorTotal: 0,
+                salary: 0,
             })
             setSelectedEmployee(null)
         }
@@ -91,9 +95,10 @@ export function PagamentoFormDialog({
                 ...data,
                 colaboradorId: id,
                 tipoRemuneracao: emp.tipoRemuneracao || 'fixed',
-                valorAPagar: emp.tipoRemuneracao === 'production' ? (emp.producaoValorTotal || 0) : (emp.salary || 0),
+                valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
                 producaoObraId: emp.producaoObraId || '',
                 producaoValorTotal: emp.producaoValorTotal || 0,
+                salary: emp.salary || 0,
                 producaoData: emp.producaoData ? new Date(emp.producaoData) : undefined
             })
         }
@@ -172,7 +177,7 @@ export function PagamentoFormDialog({
                                 </div>
                             ) : (
                                 <div className="space-y-4 p-5 border rounded-xl bg-blue-50 border-blue-100 animate-in slide-in-from-top-2 duration-200">
-                                    <h4 className="text-xs font-bold text-blue-800 uppercase">Controle de Produção</h4>
+                                    <h4 className="text-xs font-bold text-blue-800 uppercase">Valores e Produção</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2 text-blue-700">
                                             <Label className="text-xs font-bold">Data Ref.</Label>
@@ -190,9 +195,19 @@ export function PagamentoFormDialog({
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div className="space-y-2 md:col-span-2 text-blue-700">
-                                            <Label className="text-xs font-bold">Valor Total Produzido (R$)</Label>
-                                            <MoneyInput value={data.valorAPagar} onChange={(v) => setData({ ...data, valorAPagar: v, producaoValorTotal: v })} />
+                                        <div className="space-y-2 text-blue-700">
+                                            <Label className="text-xs font-bold">Salário Fixo / Base (R$)</Label>
+                                            <MoneyInput value={data.salary || 0} onChange={(v) => setData({ ...data, salary: v, valorAPagar: v + (data.producaoValorTotal || 0) })} />
+                                        </div>
+                                        <div className="space-y-2 text-blue-700">
+                                            <Label className="text-xs font-bold">Produção de Momento (R$)</Label>
+                                            <MoneyInput value={data.producaoValorTotal || 0} onChange={(v) => setData({ ...data, producaoValorTotal: v, valorAPagar: (data.salary || 0) + v })} />
+                                        </div>
+                                        <div className="space-y-2 md:col-span-2 text-blue-900 bg-blue-100 p-3 rounded-md flex justify-between items-center mt-2">
+                                            <Label className="text-sm font-bold">Total a Pagar (R$)</Label>
+                                            <span className="text-2xl font-black">
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.valorAPagar || 0)}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
