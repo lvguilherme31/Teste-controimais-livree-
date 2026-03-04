@@ -51,6 +51,7 @@ export default function PagamentoFuncionarios() {
         addEmployeePayment,
         updateEmployeePayment,
         deleteEmployeePayment,
+        updateEmployee,
     } = useAppStore()
     const { toast } = useToast()
 
@@ -116,7 +117,28 @@ export default function PagamentoFuncionarios() {
     const handleSavePayment = async (data: any) => {
         if (!selectedPayment) return
         try {
-            const { file, ...paymentData } = data
+            const { file, tipoRemuneracao, producaoData, producaoObraId, producaoValorTotal, ...paymentData } = data
+
+            // Sync employee configuration edits from this modal back to the Employee table
+            if (paymentData.colaboradorId) {
+                const isProduction = tipoRemuneracao === 'production'
+                let salaryUpdate = {}
+                if (isProduction) {
+                    salaryUpdate = {
+                        tipoRemuneracao: 'production',
+                        producaoData: producaoData,
+                        producaoObraId: producaoObraId,
+                        producaoValorTotal: paymentData.valorAPagar
+                    }
+                } else {
+                    salaryUpdate = {
+                        tipoRemuneracao: 'fixed',
+                        salary: paymentData.valorAPagar
+                    }
+                }
+                await updateEmployee(paymentData.colaboradorId, salaryUpdate)
+            }
+
             if (paymentData.id) {
                 await updateEmployeePayment(paymentData.id, paymentData)
             } else {
