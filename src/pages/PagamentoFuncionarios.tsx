@@ -150,7 +150,7 @@ export default function PagamentoFuncionarios() {
                     salaryUpdate = {
                         tipoRemuneracao: 'production',
                         producaoData: producaoData,
-                        producaoObraId: producaoObraId,
+                        producaoObraId: (!producaoObraId || producaoObraId === 'none') ? null : producaoObraId,
                         producaoValorTotal: producaoValorTotal,
                         salary: salary
                     }
