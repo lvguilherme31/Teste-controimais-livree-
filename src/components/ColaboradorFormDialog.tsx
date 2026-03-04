@@ -620,46 +620,33 @@ export function ColaboradorFormDialog({
                                                     </Select>
                                                 </div>
 
-                                                {data.tipoRemuneracao === 'fixed' || !data.tipoRemuneracao ? (
-                                                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                                        <Label className="text-slate-600 font-medium">Salário / Piso (R$)</Label>
+                                                <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-slate-600 font-medium">Salário Fixo / Base (R$)</Label>
                                                         <MoneyInput value={data.salary || 0} onChange={(val) => setData({ ...data, salary: val })} />
                                                     </div>
-                                                ) : (
-                                                    <div className="space-y-4 p-5 border rounded-xl bg-blue-50 border-blue-100 animate-in slide-in-from-top-2 duration-200">
-                                                        <h4 className="text-xs font-bold text-blue-800 uppercase">Controle de Produção</h4>
-                                                        <div className="space-y-4">
-                                                            <div className="space-y-2">
-                                                                <Label className="text-blue-700 text-xs font-bold">Data Ref.</Label>
-                                                                <Input
-                                                                    type="date"
-                                                                    value={data.producaoData ? safeFormat(new Date(data.producaoData), 'yyyy-MM-dd') : ''}
-                                                                    onChange={(e) => {
-                                                                        const newDate = e.target.value ? parseSafeDate(e.target.value) : undefined;
-                                                                        setData({ ...data, producaoData: newDate });
-                                                                    }}
-                                                                    className="bg-white border-blue-200"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-blue-700 text-xs font-bold">Obra</Label>
-                                                                <Select value={data.producaoObraId || 'none'} onValueChange={(v) => setData({ ...data, producaoObraId: v === 'none' ? null : v })}>
-                                                                    <SelectTrigger className="bg-white border-blue-200 shadow-sm">
-                                                                        <SelectValue placeholder="Obra" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="none">Selecione...</SelectItem>
-                                                                        {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-blue-700 text-xs font-bold">Valor Total Produzido (R$)</Label>
-                                                                <MoneyInput value={data.producaoValorTotal || 0} onChange={(v) => setData({ ...data, producaoValorTotal: v })} />
+
+                                                    {data.tipoRemuneracao === 'production' && (
+                                                        <div className="space-y-4 p-5 border rounded-xl bg-blue-50 border-blue-100 animate-in slide-in-from-top-2 duration-200">
+                                                            <h4 className="text-xs font-bold text-blue-800 uppercase">Definição de Produção</h4>
+                                                            <div className="space-y-4">
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-blue-700 text-xs font-bold">Obra Padrão (Opcional)</Label>
+                                                                    <Select value={data.producaoObraId || 'none'} onValueChange={(v) => setData({ ...data, producaoObraId: v === 'none' ? null : v })}>
+                                                                        <SelectTrigger className="bg-white border-blue-200 shadow-sm">
+                                                                            <SelectValue placeholder="Selecione a Obra" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="none">Sem Obra Padrão</SelectItem>
+                                                                            {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <p className="text-[11px] text-blue-600">A Produção de Momento é lançada diretamente na aba de Pagamentos.</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

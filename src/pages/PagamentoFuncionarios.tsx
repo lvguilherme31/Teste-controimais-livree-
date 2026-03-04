@@ -334,7 +334,7 @@ export default function PagamentoFuncionarios() {
                                 </TableCell>
                                 <TableCell className="font-semibold text-slate-700">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                                        item.payment?.valorAPagar ??
+                                        item.payment?.valorAPagar ||
                                         (item.employee.tipoRemuneracao === 'production' ? ((item.employee.salary || 0) + (item.employee.producaoValorTotal || 0)) : (item.employee.salary || 0))
                                     )}
                                 </TableCell>

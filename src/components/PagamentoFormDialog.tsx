@@ -61,7 +61,7 @@ export function PagamentoFormDialog({
             setData({
                 colaboradorId: initialData.colaboradorId || '',
                 mesReferencia: initialData.mesReferencia || format(new Date(), 'yyyy-MM'),
-                valorAPagar: initialData.valorAPagar || 0,
+                valorAPagar: initialData.valorAPagar || (emp?.tipoRemuneracao === 'production' ? ((emp?.salary || 0) + (emp?.producaoValorTotal || 0)) : (emp?.salary || 0)),
                 status: initialData.status || 'pendente',
                 observacoes: initialData.observacoes || '',
                 tipoRemuneracao: emp?.tipoRemuneracao || 'fixed',
