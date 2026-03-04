@@ -28,6 +28,7 @@ import {
   Trash2,
   Edit,
   Loader2,
+  Eye,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
@@ -180,12 +181,19 @@ export default function NotasFiscais() {
     }
   }
 
-  const handleDownloadDocument = async (invoice: Invoice) => {
+  const handleViewAttachment = (invoice: Invoice) => {
     if (invoice.attachmentUrl) {
       window.open(invoice.attachmentUrl, '_blank', 'noopener,noreferrer')
-      return
+    } else {
+      toast({
+        title: 'Sem Anexo',
+        description: 'Esta nota não possui um documento anexado.',
+        variant: 'destructive',
+      })
     }
+  }
 
+  const handleGeneratePDF = async (invoice: Invoice) => {
     try {
       setIsGeneratingPdf(invoice.id)
       toast({
@@ -301,7 +309,24 @@ export default function NotasFiscais() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDownloadDocument(inv)}
+                            onClick={() => handleViewAttachment(inv)}
+                            className={!inv.attachmentUrl ? "opacity-30 cursor-not-allowed" : ""}
+                            disabled={isGenerating || !inv.attachmentUrl}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ver Anexo (Documento Original)</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleGeneratePDF(inv)}
                             disabled={isGenerating}
                           >
                             {isGenerating ? (
@@ -312,7 +337,7 @@ export default function NotasFiscais() {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{inv.attachmentUrl ? 'Ver Documento Anexado' : 'Baixar PDF da Nota (Gerado)'}</p>
+                          <p>Baixar Ficha da Nota (PDF Gerado)</p>
                         </TooltipContent>
                       </Tooltip>
 
