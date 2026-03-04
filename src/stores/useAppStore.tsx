@@ -542,9 +542,6 @@ export const useAppStore = create<AppState>()(
         try {
           const data = await pagamentosService.getAll()
           set({ employeePayments: data || [] })
-
-          // Auto generate monthly obligations
-          await get().generateMonthlyObligations()
         } catch (error) {
           console.error('Error fetching employee payments:', error)
         }

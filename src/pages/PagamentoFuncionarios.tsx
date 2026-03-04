@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/useAppStore'
 import { EmployeePayment, Employee, Payslip } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -53,8 +53,13 @@ export default function PagamentoFuncionarios() {
         updateEmployeePayment,
         deleteEmployeePayment,
         updateEmployee,
+        generateMonthlyObligations,
     } = useAppStore()
     const { toast } = useToast()
+
+    useEffect(() => {
+        generateMonthlyObligations()
+    }, [generateMonthlyObligations])
 
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
