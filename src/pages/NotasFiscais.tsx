@@ -137,6 +137,8 @@ export default function NotasFiscais() {
       const invoiceToSave = {
         ...currentInvoice,
         items: processedItems,
+        dueDate: currentInvoice.issueDate, // dummy value since it's removed from UI
+        status: 'paid', // dummy value since it's removed from UI
       } as Invoice
 
       if (currentInvoice.id) {
@@ -179,6 +181,11 @@ export default function NotasFiscais() {
   }
 
   const handleDownloadDocument = async (invoice: Invoice) => {
+    if (invoice.attachmentUrl) {
+      window.open(invoice.attachmentUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
     try {
       setIsGeneratingPdf(invoice.id)
       toast({
@@ -244,8 +251,6 @@ export default function NotasFiscais() {
               <TableHead>Cliente / Fornecedor</TableHead>
               <TableHead>CNPJ</TableHead>
               <TableHead>Valor</TableHead>
-              <TableHead>Vencimento</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -287,21 +292,6 @@ export default function NotasFiscais() {
                       minimumFractionDigits: 2,
                     })}
                   </TableCell>
-                  <TableCell className={cn('font-bold', dateStatus.color)}>
-                    {format(new Date(inv.dueDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={cn(
-                        statusInfo.bg,
-                        statusInfo.color,
-                        statusInfo.border,
-                        'border shadow-none whitespace-nowrap',
-                      )}
-                    >
-                      {statusInfo.label}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Tooltip>
@@ -320,7 +310,7 @@ export default function NotasFiscais() {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Baixar PDF da Nota</p>
+                          <p>{inv.attachmentUrl ? 'Ver Documento Anexado' : 'Baixar PDF da Nota (Gerado)'}</p>
                         </TooltipContent>
                       </Tooltip>
 
@@ -385,7 +375,7 @@ export default function NotasFiscais() {
               </div>
             </div>
 
-            {/* 2. Data Emissão e Vencimento */}
+            {/* 2. Data Emissão */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
@@ -398,40 +388,6 @@ export default function NotasFiscais() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label>
-                  Vencimento <span className="text-red-500">*</span>
-                </Label>
-                <DatePicker
-                  date={currentInvoice.dueDate}
-                  setDate={(date) =>
-                    setCurrentInvoice({ ...currentInvoice, dueDate: date })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 3. Status */}
-            <div className="space-y-2">
-              <Label>
-                Status <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={currentInvoice.status}
-                onValueChange={(v: any) =>
-                  setCurrentInvoice({ ...currentInvoice, status: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
-                  <SelectItem value="overdue">Vencido</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* 4. Cliente / Fornecedor */}
@@ -459,55 +415,31 @@ export default function NotasFiscais() {
               />
             </div>
 
-            {/* 6. Dados do Emitente */}
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Dados do Emitente (Sua Empresa)
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Razão Social</Label>
-                  <Input
-                    value={currentInvoice.emitterName || ''}
-                    onChange={(e) =>
-                      setCurrentInvoice({
-                        ...currentInvoice,
-                        emitterName: e.target.value,
-                      })
-                    }
-                    placeholder="Nome da sua empresa"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>CNPJ do Emitente</Label>
-                  <Input
-                    value={currentInvoice.emitterCnpj || ''}
-                    onChange={(e) =>
-                      setCurrentInvoice({
-                        ...currentInvoice,
-                        emitterCnpj: formatCNPJ(e.target.value),
-                      })
-                    }
-                    placeholder="00.000.000/0000-00"
-                  />
-                </div>
-              </div>
-            </div>
+
 
             {/* 7. Itens / Descrição (Substitui Anexos) */}
             <div className="space-y-2 border-t pt-4">
-              <Label>
-                Descrição dos Itens / Serviços (um por linha)
-                <span className="ml-1 text-xs text-muted-foreground font-normal">
-                  * Esses dados aparecerão no documento gerado
-                </span>
-              </Label>
-              <Textarea
-                placeholder="Ex: Consultoria Técnica - 10h&#10;Material Elétrico - Lote 2"
-                rows={5}
+              <Label>Descrição dos Itens / Serviços</Label>
+              <Input
+                placeholder="Ex: Consultoria Técnica"
                 value={itemsText}
                 onChange={(e) => setItemsText(e.target.value)}
               />
+            </div>
+
+            {/* 8. Anexar Documento */}
+            <div className="space-y-2 border-t pt-4">
+              <Label>Anexar Documento</Label>
+              <div className="flex gap-2">
+                <Input type="file" onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setCurrentInvoice({ ...currentInvoice, file: e.target.files[0] } as any)
+                  }
+                }} />
+              </div>
+              {currentInvoice.attachmentName && (
+                <p className="text-xs text-muted-foreground">Documento atual: {currentInvoice.attachmentName}</p>
+              )}
             </div>
 
             <Button

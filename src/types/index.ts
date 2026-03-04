@@ -252,6 +252,7 @@ export interface Invoice {
   status: 'paid' | 'pending' | 'overdue' | 'cancelled'
   attachmentUrl?: string
   attachmentName?: string
+  file?: File
   items: string[]
   emitterName?: string
   emitterCnpj?: string

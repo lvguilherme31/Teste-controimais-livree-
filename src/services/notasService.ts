@@ -33,30 +33,57 @@ const mapStatusFromDb = (status: string) => {
 
 export const notasService = {
   async getAll(): Promise<Invoice[]> {
-    // We strictly avoid fetching from anexos_notas_fiscais as per user story
+    // Reverted the fetch from anexos_notas_fiscais as the user specifically requested to add attachments
     const { data, error } = await supabase
       .from('notas_fiscais')
-      .select('*')
+      .select('*, anexos_notas_fiscais(*)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
     if (!data) return []
 
-    return (data as any[]).map((nf) => ({
-      id: nf.id,
-      number: nf.numero,
-      issueDate: nf.data_emissao ? new Date(nf.data_emissao) : new Date(),
-      client: nf.cliente_fornecedor || '',
-      cnpj: nf.cnpj_cpf || '',
-      value: Number(nf.valor || 0),
-      dueDate: nf.data_vencimento ? new Date(nf.data_vencimento) : new Date(),
-      status: mapStatusFromDb(nf.status as string) as any,
-      attachmentUrl: undefined,
-      attachmentName: undefined,
-      items: Array.isArray(nf.itens) ? (nf.itens as string[]) : [],
-      emitterName: nf.emitente_nome || null,
-      emitterCnpj: nf.emitente_cnpj || null,
-    }))
+    return (data as any[]).map((nf) => {
+      const anexo = nf.anexos_notas_fiscais && nf.anexos_notas_fiscais.length > 0 ? nf.anexos_notas_fiscais[0] : null;
+      return {
+        id: nf.id,
+        number: nf.numero,
+        issueDate: nf.data_emissao ? new Date(nf.data_emissao) : new Date(),
+        client: nf.cliente_fornecedor || '',
+        cnpj: nf.cnpj_cpf || '',
+        value: Number(nf.valor || 0),
+        dueDate: nf.data_vencimento ? new Date(nf.data_vencimento) : new Date(),
+        status: mapStatusFromDb(nf.status as string) as any,
+        attachmentUrl: anexo ? anexo.url_arquivo : undefined,
+        attachmentName: anexo ? anexo.nome_arquivo : undefined,
+        items: Array.isArray(nf.itens) ? (nf.itens as string[]) : [],
+        emitterName: nf.emitente_nome || null,
+        emitterCnpj: nf.emitente_cnpj || null,
+      }
+    })
+  },
+
+  async uploadAttachment(notaFiscalId: string, file: File): Promise<void> {
+    const fileName = `${notaFiscalId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+    const fileBuffer = await file.arrayBuffer()
+    const { error: uploadError } = await supabase.storage.from('notas_fiscais').upload(fileName, fileBuffer, {
+      contentType: file.type,
+      upsert: true,
+    })
+
+    if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`)
+
+    const { data: { publicUrl } } = supabase.storage.from('notas_fiscais').getPublicUrl(fileName)
+
+    // Remove old specific attachments so we only keep 1
+    await supabase.from('anexos_notas_fiscais').delete().eq('nota_fiscal_id', notaFiscalId)
+
+    const { error: dbError } = await supabase.from('anexos_notas_fiscais').insert({
+      nota_fiscal_id: notaFiscalId,
+      nome_arquivo: file.name,
+      url_arquivo: publicUrl,
+    })
+
+    if (dbError) throw new Error(`Falha ao salvar anexo: ${dbError.message}`)
   },
 
   async getNextNumber(): Promise<string> {
@@ -103,6 +130,10 @@ export const notasService = {
 
     if (error) throw error
 
+    if ((invoice as any).file) {
+      await this.uploadAttachment(nf.id, (invoice as any).file)
+    }
+
     return {
       ...invoice,
       id: nf.id,
@@ -129,6 +160,10 @@ export const notasService = {
         .update(updates)
         .eq('id', id)
       if (error) throw error
+    }
+
+    if (invoice.file) {
+      await this.uploadAttachment(id, invoice.file)
     }
   },
 
