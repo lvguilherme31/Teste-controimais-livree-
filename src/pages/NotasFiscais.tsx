@@ -211,9 +211,9 @@ export default function NotasFiscais() {
 
   const filteredInvoices = invoices.filter(
     (inv) =>
-      inv.number.includes(searchTerm) ||
-      inv.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inv.cnpj.includes(searchTerm),
+      (inv.number?.toString() || '').includes(searchTerm) ||
+      (inv.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inv.cnpj || '').includes(searchTerm),
   )
 
   return (
@@ -282,7 +282,9 @@ export default function NotasFiscais() {
                     {inv.number}
                   </TableCell>
                   <TableCell>
-                    {format(new Date(inv.issueDate), 'dd/MM/yyyy')}
+                    {inv.issueDate && !isNaN(new Date(inv.issueDate).getTime())
+                      ? format(new Date(inv.issueDate), 'dd/MM/yyyy')
+                      : 'N/D'}
                   </TableCell>
                   <TableCell>{inv.client}</TableCell>
                   <TableCell>{inv.cnpj}</TableCell>
