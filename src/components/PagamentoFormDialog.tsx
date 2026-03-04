@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
+import { useToast } from '@/hooks/use-toast'
 import { Employee, Project, EmployeePayment } from '@/types'
 import { format } from 'date-fns'
 
@@ -38,6 +39,7 @@ export function PagamentoFormDialog({
     projects,
     initialData
 }: PagamentoFormDialogProps) {
+    const { toast } = useToast()
     const [data, setData] = useState<any>({
         colaboradorId: '',
         mesReferencia: format(new Date(), 'yyyy-MM'),
@@ -105,7 +107,15 @@ export function PagamentoFormDialog({
     }
 
     const handleSave = () => {
-        if (!data.colaboradorId || !data.mesReferencia) return
+        if (!data.colaboradorId) {
+            toast({
+                title: 'Atenção',
+                description: 'Por favor, selecione um Colaborador antes de finalizar o pagamento.',
+                variant: 'destructive'
+            })
+            return
+        }
+        if (!data.mesReferencia) return
         onSave({ ...data, file })
     }
 

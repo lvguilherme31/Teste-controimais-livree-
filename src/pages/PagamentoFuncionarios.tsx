@@ -176,9 +176,9 @@ export default function PagamentoFuncionarios() {
 
             toast({ title: 'Sucesso', description: 'Pagamento salvo com sucesso.' })
             setIsEditOpen(false)
-        } catch (error) {
+        } catch (error: any) {
             console.error(error)
-            toast({ title: 'Erro', description: 'Falha ao salvar pagamento.', variant: 'destructive' })
+            toast({ title: 'Erro', description: `Falha ao salvar pagamento: ${error?.message || error}`, variant: 'destructive' })
         }
     }
 
