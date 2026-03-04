@@ -554,34 +554,42 @@ export const useAppStore = create<AppState>()(
         const now = new Date()
         const mesReferencia = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-        for (const emp of employees) {
-          // Do NOT generate automatic payments for production employees
-          if (emp.tipoRemuneracao === 'production') continue
-
-          // Check if already has payment for this month
+        try {
+          // Fetch existing payments for this month in one go
           const { data: existing } = await (supabase
             .from('pagamentos_colaboradores') as any)
-            .select('id')
-            .eq('colaborador_id', emp.id)
+            .select('colaborador_id')
             .eq('mes_referencia', mesReferencia)
-            .maybeSingle()
 
-          if (existing) continue
+          const existingIds = new Set(existing?.map((p: any) => p.colaborador_id) || [])
 
-          // Create obligation
-          try {
-            await pagamentosService.create({
-              colaboradorId: emp.id,
-              mesReferencia,
-              valorAPagar: emp.salary || 0,
+          const toInsert: any[] = []
+
+          for (const emp of employees) {
+            // Do NOT generate automatic payments for production employees
+            if (emp.tipoRemuneracao === 'production') continue
+
+            // Check if already has payment for this month via the Set
+            if (existingIds.has(emp.id)) continue
+
+            toInsert.push({
+              colaborador_id: emp.id,
+              mes_referencia: mesReferencia,
+              valor_a_pagar: emp.salary || 0,
               status: 'pendente',
-            } as any)
-          } catch (error) {
-            console.error(`Failed to generate obligation for employee ${emp.id}:`, error)
+            })
           }
-        }
 
-        // Refresh once after batch creation
+          if (toInsert.length > 0) {
+            // Batch insert
+            await (supabase.from('pagamentos_colaboradores') as any).insert(toInsert)
+          }
+
+        } catch (error) {
+          console.error(`Failed to generate monthly obligations:`, error)
+        }
+        // Refresh once after generation logic completes
+        // We call this even if no inserts happened to make sure employeePayments is always populated initially
         const updatedData = await pagamentosService.getAll()
         set({ employeePayments: updatedData || [] })
       },
