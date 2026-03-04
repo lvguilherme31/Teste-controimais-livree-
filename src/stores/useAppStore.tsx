@@ -553,6 +553,9 @@ export const useAppStore = create<AppState>()(
         const mesReferencia = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
         for (const emp of employees) {
+          // Do NOT generate automatic payments for production employees
+          if (emp.tipoRemuneracao === 'production') continue
+
           // Check if already has payment for this month
           const { data: existing } = await (supabase
             .from('pagamentos_colaboradores') as any)
@@ -568,7 +571,7 @@ export const useAppStore = create<AppState>()(
             await pagamentosService.create({
               colaboradorId: emp.id,
               mesReferencia,
-              valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
+              valorAPagar: emp.salary || 0,
               status: 'pendente',
             } as any)
           } catch (error) {
