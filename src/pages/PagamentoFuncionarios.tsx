@@ -11,6 +11,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    TableFooter,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -40,8 +41,8 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { DatePicker } from '@/components/ui/date-picker'
-import { pagamentosService } from '@/services/pagamentosService'
 import { PagamentoFormDialog } from '@/components/PagamentoFormDialog'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function PagamentoFuncionarios() {
     const {
@@ -58,6 +59,7 @@ export default function PagamentoFuncionarios() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
+    const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([])
 
     // Modals
     const [isEditOpen, setIsEditOpen] = useState(false)
@@ -91,6 +93,27 @@ export default function PagamentoFuncionarios() {
         }
         return matchesSearch && matchesStatus
     })
+
+    const toggleAll = () => {
+        if (selectedEmployeeIds.length === filteredPayments.length && filteredPayments.length > 0) {
+            setSelectedEmployeeIds([])
+        } else {
+            setSelectedEmployeeIds(filteredPayments.map(item => item.employee.id))
+        }
+    }
+
+    const toggleSelection = (id: string) => {
+        setSelectedEmployeeIds(prev =>
+            prev.includes(id) ? prev.filter(empId => empId !== id) : [...prev, id]
+        )
+    }
+
+    const totalSelectedValue = filteredPayments
+        .filter(item => selectedEmployeeIds.includes(item.employee.id))
+        .reduce((sum, item) => {
+            const val = item.payment?.valorAPagar || (item.employee.tipoRemuneracao === 'production' ? ((item.employee.salary || 0) + (item.employee.producaoValorTotal || 0)) : (item.employee.salary || 0))
+            return sum + val
+        }, 0)
 
     const handleCreatePayment = () => {
         setSelectedPayment({
@@ -300,6 +323,13 @@ export default function PagamentoFuncionarios() {
                 <Table>
                     <TableHeader className="bg-slate-50">
                         <TableRow>
+                            <TableHead className="w-[50px]">
+                                <Checkbox
+                                    checked={filteredPayments.length > 0 && selectedEmployeeIds.length === filteredPayments.length}
+                                    onCheckedChange={toggleAll}
+                                    aria-label="Selecionar todos"
+                                />
+                            </TableHead>
                             <TableHead>Colaborador</TableHead>
                             <TableHead>Obra</TableHead>
                             <TableHead>Remuneração</TableHead>
@@ -312,12 +342,19 @@ export default function PagamentoFuncionarios() {
                     <TableBody>
                         {filteredPayments.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-12 text-slate-500">
+                                <TableCell colSpan={8} className="text-center py-12 text-slate-500">
                                     Nenhum pagamento registrado para os filtros selecionados.
                                 </TableCell>
                             </TableRow>
                         ) : filteredPayments.map((item) => (
                             <TableRow key={item.employee.id}>
+                                <TableCell>
+                                    <Checkbox
+                                        checked={selectedEmployeeIds.includes(item.employee.id)}
+                                        onCheckedChange={() => toggleSelection(item.employee.id)}
+                                        aria-label={`Selecionar ${item.employee.name}`}
+                                    />
+                                </TableCell>
                                 <TableCell>
                                     <div>
                                         <p className="font-medium text-slate-900">{item.employee.name}</p>
@@ -371,6 +408,16 @@ export default function PagamentoFuncionarios() {
                             </TableRow>
                         ))}
                     </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableCell colSpan={4} className="font-bold text-right">
+                                Total Selecionado ({selectedEmployeeIds.length} {(selectedEmployeeIds.length === 1) ? 'colaborador' : 'colaboradores'}):
+                            </TableCell>
+                            <TableCell colSpan={4} className="font-black text-lg text-emerald-700">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalSelectedValue)}
+                            </TableCell>
+                        </TableRow>
+                    </TableFooter>
                 </Table>
             </div>
 
