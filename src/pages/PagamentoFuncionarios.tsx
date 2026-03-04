@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { DatePicker } from '@/components/ui/date-picker'
+import { pagamentosService } from '@/services/pagamentosService'
 import { PagamentoFormDialog } from '@/components/PagamentoFormDialog'
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -58,8 +59,11 @@ export default function PagamentoFuncionarios() {
     const { toast } = useToast()
 
     useEffect(() => {
-        generateMonthlyObligations()
-    }, [generateMonthlyObligations])
+        // Only run generation if we have employees loaded
+        if (employees.length > 0) {
+            generateMonthlyObligations()
+        }
+    }, [generateMonthlyObligations, employees.length])
 
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')

@@ -549,6 +549,8 @@ export const useAppStore = create<AppState>()(
 
       generateMonthlyObligations: async () => {
         const { employees } = get()
+        if (employees.length === 0) return; // Wait for employees to load
+
         const now = new Date()
         const mesReferencia = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
