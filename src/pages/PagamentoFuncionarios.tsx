@@ -197,41 +197,28 @@ export default function PagamentoFuncionarios() {
         }
     }
 
-    const handleQuickPay = async (id: string) => {
+    const handleQuickPay = async (employee: Employee, payment?: EmployeePayment) => {
         try {
-            await updateEmployeePayment(id, {
-                status: 'pago',
-                dataPagamento: new Date()
-            })
-            toast({ title: 'Sucesso', description: 'Pagamento marcado como pago.' })
+            if (payment?.id) {
+                await updateEmployeePayment(payment.id, {
+                    status: 'pago',
+                    dataPagamento: new Date()
+                })
+            } else {
+                const valorAPagar = employee.tipoRemuneracao === 'production'
+                    ? ((employee.salary || 0) + (employee.producaoValorTotal || 0))
+                    : (employee.salary || 0)
 
-            // Auto-Generate Next Month
-            const payment = employeePayments.find(p => p.id === id)
-            if (payment) {
-                const currentMonthDate = new Date(`${payment.mesReferencia}-01T00:00:00`)
-                currentMonthDate.setMonth(currentMonthDate.getMonth() + 1)
-                const nextMonthStr = format(currentMonthDate, 'yyyy-MM')
-
-                const emp = employees.find(e => e.id === payment.colaboradorId)
-                if (emp && emp.status === 'ativo') {
-                    // Check if already exists
-                    const exists = employeePayments.some(p => p.colaboradorId === emp.id && p.mesReferencia === nextMonthStr)
-                    if (!exists) {
-                        try {
-                            await addEmployeePayment({
-                                colaboradorId: emp.id,
-                                mesReferencia: nextMonthStr,
-                                valorAPagar: emp.tipoRemuneracao === 'production' ? ((emp.salary || 0) + (emp.producaoValorTotal || 0)) : (emp.salary || 0),
-                                status: 'pendente',
-                                observacoes: 'Gerado automaticamente'
-                            } as any)
-                        } catch (e) {
-                            console.error("Failed to generate next month payment", e)
-                        }
-                    }
-                }
+                await addEmployeePayment({
+                    colaboradorId: employee.id,
+                    mesReferencia: selectedMonth,
+                    valorAPagar: valorAPagar,
+                    status: 'pago',
+                    observacoes: 'Pgto Express',
+                    dataPagamento: new Date()
+                } as any)
             }
-
+            toast({ title: 'Sucesso', description: 'Pagamento marcado como concluído.' })
         } catch (error) {
             toast({ title: 'Erro', description: 'Falha ao atualizar status.', variant: 'destructive' })
         }
@@ -392,22 +379,40 @@ export default function PagamentoFuncionarios() {
                                 <TableCell>{item.payment?.mesReferencia || selectedMonth}</TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2 text-[#000000]">
-                                        {item.payment && item.payment.status === 'pendente' && (
-                                            <Button variant="ghost" size="icon" onClick={() => handleQuickPay(item.payment!.id)} title="Marcar como Pago">
-                                                <Check className="h-4 w-4 text-green-600" />
-                                            </Button>
-                                        )}
-                                        <Button variant="ghost" size="icon" onClick={() => handleEditPayment(item.employee, item.payment)}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleQuickPay(item.employee, item.payment)}
+                                            disabled={item.payment?.status === 'pago'}
+                                            title="Marcar como Pago"
+                                        >
+                                            <Check className={`h-4 w-4 ${item.payment?.status === 'pago' ? 'text-slate-300' : 'text-green-600'}`} />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleEditPayment(item.employee, item.payment)}
+                                            title={item.payment ? "Editar Lançamento" : "Novo Lançamento"}
+                                        >
                                             <Pencil className="h-4 w-4 text-blue-600" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleOpenPayslips(item.employee.id)}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleOpenPayslips(item.employee.id)}
+                                            title="Holerites"
+                                        >
                                             <FileText className="h-4 w-4 text-slate-600" />
                                         </Button>
-                                        {item.payment && (
-                                            <Button variant="ghost" size="icon" onClick={() => handleDeletePayment(item.payment!.id)}>
-                                                <Trash2 className="h-4 w-4 text-red-600" />
-                                            </Button>
-                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => item.payment && handleDeletePayment(item.payment.id)}
+                                            disabled={!item.payment}
+                                            title="Excluir Lançamento"
+                                        >
+                                            <Trash2 className={`h-4 w-4 ${!item.payment ? 'text-slate-300' : 'text-red-600'}`} />
+                                        </Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
