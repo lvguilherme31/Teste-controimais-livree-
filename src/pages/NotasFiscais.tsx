@@ -378,12 +378,16 @@ export default function NotasFiscais() {
             {/* 1. Número (Auto) e Valor */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Número</Label>
+                <Label>Número <span className="text-red-500">*</span></Label>
                 <Input
                   value={currentInvoice.number || ''}
-                  disabled
-                  className="bg-muted"
-                  readOnly
+                  onChange={(e) =>
+                    setCurrentInvoice({
+                      ...currentInvoice,
+                      number: e.target.value,
+                    })
+                  }
+                  placeholder="Ex: 20260002"
                 />
               </div>
               <div className="space-y-2">
