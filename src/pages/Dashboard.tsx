@@ -16,7 +16,7 @@ import {
 import { format, addDays, isBefore, differenceInDays } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
-import { cn, getAlertStatus } from '@/lib/utils'
+import { cn, getAlertStatus, parseSafeDate } from '@/lib/utils'
 import { useEffect } from 'react'
 
 export default function Dashboard() {
@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     // 1. Unified Document Alerts (from store aggregation)
     expiringDocuments.forEach((doc) => {
-      const date = new Date(doc.data_validade)
+      const date = parseSafeDate(doc.data_validade) || new Date()
       const status = getAlertStatus(date)
 
       // Determine Icon based on category

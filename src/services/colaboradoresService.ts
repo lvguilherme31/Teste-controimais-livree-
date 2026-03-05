@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client'
 import { Employee, EmployeeStatus, EmployeeDocument } from '@/types'
-import { addDays } from 'date-fns'
+import { parseSafeDate } from '@/lib/utils'
 
 const BUCKET_NAME = 'crm-docs'
 
@@ -57,10 +57,10 @@ export const colaboradoresService = {
 
         documents[key] = {
           id: d.id,
-          name: d.nome_arquivo,
-          url: d.url_arquivo,
-          uploadDate: new Date(d.data_upload),
-          expiry: d.data_validade ? new Date(d.data_validade) : undefined,
+          name: d.nome_arquivo || '',
+          url: d.url_arquivo || '',
+          uploadDate: d.data_upload ? (parseSafeDate(d.data_upload) || new Date()) : new Date(),
+          expiry: d.data_validade ? (parseSafeDate(d.data_validade) || undefined) : undefined,
           type: d.tipo,
           description: d.descricao,
         }
@@ -87,9 +87,9 @@ export const colaboradoresService = {
         },
         role: e.cargo || '',
         salary: e.salario || 0,
-        admissionDate: e.data_admissao ? new Date(e.data_admissao) : new Date(),
-        dismissalDate: e.data_desligamento ? new Date(e.data_desligamento) : undefined,
-        vacationDueDate: e.vencimento_periodo ? new Date(e.vencimento_periodo) : undefined,
+        admissionDate: e.data_admissao ? (parseSafeDate(e.data_admissao) || new Date()) : new Date(),
+        dismissalDate: e.data_desligamento ? (parseSafeDate(e.data_desligamento) || undefined) : undefined,
+        vacationDueDate: e.vencimento_periodo ? (parseSafeDate(e.vencimento_periodo) || undefined) : undefined,
         status: (e.status as EmployeeStatus) || 'ativo',
         documents,
         bankDetails: (e.dados_bancarios as any) || {
@@ -102,7 +102,7 @@ export const colaboradoresService = {
         carteira_digital_senha: e.carteira_digital_senha || '',
         photoUrl: e.foto_url || '',
         tipoRemuneracao: e.tipo_remuneracao || 'fixed',
-        producaoData: e.producao_data ? new Date(e.producao_data) : undefined,
+        producaoData: e.producao_data ? (parseSafeDate(e.producao_data) || undefined) : undefined,
         producaoObraId: e.producao_obra_id,
         producaoQuantidade: e.producao_quantidade,
         producaoValorUnitario: e.producao_valor_unitario,
@@ -262,29 +262,35 @@ export const colaboradoresService = {
         if (error) throw new Error(`Erro ao atualizar: ${error.message}`)
       }
     } else {
-      if (!file) return
+      let finalFileName = null;
+      let finalPublicUrl = null;
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${employeeId}/${safeType}/${crypto.randomUUID()}.${fileExt}`
+      if (file) {
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${employeeId}/${safeType}/${crypto.randomUUID()}.${fileExt}`
 
-      const { error: uploadError } = await uploadToStorage(fileName, file)
+        const { error: uploadError } = await uploadToStorage(fileName, file)
 
-      if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`)
+        if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`)
 
-      const { data: publicUrl } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName)
+        const { data: publicUrl } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(fileName)
+
+        finalFileName = file.name
+        finalPublicUrl = publicUrl.publicUrl
+      }
 
       const { error } = await supabase.from('documentos_admissao').insert({
         colaborador_id: employeeId,
         tipo: safeType as any,
-        nome_arquivo: file.name,
-        url_arquivo: publicUrl.publicUrl,
+        nome_arquivo: finalFileName,
+        url_arquivo: finalPublicUrl,
         data_validade: expiry ? safeIsoString(expiry) : null,
         descricao: description,
       })
 
-      if (error) throw new Error(`Erro ao salvar: ${error.message}`)
+      if (error) throw new Error(`Erro ao salvar documento: ${error.message}`)
     }
   },
 
