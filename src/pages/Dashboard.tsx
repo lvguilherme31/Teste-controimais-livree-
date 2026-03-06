@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Home,
 } from 'lucide-react'
-import { format, addDays, isBefore, differenceInDays } from 'date-fns'
+import { format, addDays, isBefore, differenceInDays, startOfDay } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { cn, getAlertStatus, parseSafeDate } from '@/lib/utils'
@@ -143,7 +143,9 @@ export default function Dashboard() {
 
 
   const getDeadlineText = (date: Date, severity: string) => {
-    const diff = differenceInDays(date, new Date())
+    const today = startOfDay(new Date())
+    const targetDate = startOfDay(date)
+    const diff = differenceInDays(targetDate, today)
     if (severity === 'expired') return `Vencido há ${Math.abs(diff)} dias`
     if (severity === 'ok' && diff > 0) return `Faltam ${diff} dias`
     if (severity === 'warning' || severity === 'attention' || severity === 'urgent')
