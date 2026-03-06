@@ -27,28 +27,17 @@ export const colaboradoresService = {
   async getAll(): Promise<Employee[]> {
     const { data: employees, error } = await supabase
       .from('colaboradores')
-      .select('*')
+      .select('*, documentos_admissao(*)')
       .order('nome', { ascending: true })
 
     if (error) throw error
     if (!employees) return []
 
-    // Fetch documents
-    const { data: docs, error: docsError } = await supabase
-      .from('documentos_admissao')
-      .select('*')
-      .in(
-        'colaborador_id',
-        employees.map((e) => e.id),
-      )
-
-    if (docsError) throw docsError
-
     return employees.map((e: any) => {
-      const empDocs = docs?.filter((d) => d.colaborador_id === e.id) || []
+      const empDocs = e.documentos_admissao || []
       const documents: Record<string, EmployeeDocument> = {}
 
-      empDocs.forEach((d) => {
+      empDocs.forEach((d: any) => {
         let key = d.tipo
         // Handle duplicates if necessary, though type should be unique usually
         if (documents[key]) {
