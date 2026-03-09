@@ -535,7 +535,30 @@ export const useAppStore = create<AppState>()(
           path: pathMap[doc.tipo_entidade] ?? '/',
         }))
 
-        set({ expiringDocuments: mapped })
+        // Deduplicate documents by entity and type, keeping the one with the latest expiration date
+        const deduplicatedMap = new Map<string, any>()
+        mapped.forEach((doc: any) => {
+          // Normalize the key to make sure uppercase/lowercase or spacing doesn't dup
+          const key = `${doc.entidade_id}_${String(doc.tipo).toLowerCase().trim()}`
+
+          if (!deduplicatedMap.has(key)) {
+            deduplicatedMap.set(key, doc)
+          } else {
+            const existing = deduplicatedMap.get(key)
+
+            // Use fallback timestamps to ensure robust comparison 
+            const newDate = doc.data_validade ? new Date(doc.data_validade).getTime() : 0
+            const existingDate = existing.data_validade ? new Date(existing.data_validade).getTime() : 0
+
+            if (newDate > existingDate) {
+              deduplicatedMap.set(key, doc)
+            }
+          }
+        })
+
+        const deduplicated = Array.from(deduplicatedMap.values())
+
+        set({ expiringDocuments: deduplicated })
       },
 
       fetchEmployeesPayments: async () => {
@@ -614,7 +637,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) =>
         Object.fromEntries(
           Object.entries(state).filter(
-            ([key]) => !['isInitializing'].includes(key)
+            ([key]) => !['isInitializing', 'expiringDocuments'].includes(key)
           )
         ) as AppState,
     }

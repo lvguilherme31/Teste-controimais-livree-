@@ -20,14 +20,15 @@ import { cn, getAlertStatus, parseSafeDate } from '@/lib/utils'
 import { useEffect } from 'react'
 
 export default function Dashboard() {
-  const { projects, employees, bills, expiringDocuments, accommodations, rentals, fetchBills } = useAppStore()
+  const { projects, employees, bills, expiringDocuments, accommodations, rentals, fetchBills, fetchExpiringDocuments } = useAppStore()
   const navigate = useNavigate()
   const today = new Date()
 
-  // Refresh bills on Dashboard mount to ensure up-to-date values
+  // Refresh data on Dashboard mount to ensure up-to-date values
   useEffect(() => {
     fetchBills()
-  }, [fetchBills])
+    fetchExpiringDocuments()
+  }, [fetchBills, fetchExpiringDocuments])
 
   // KPI 1: Active Works
   const activeProjects = projects.filter((p) => p.status === 'ativa').length
@@ -136,7 +137,9 @@ export default function Dashboard() {
   const obraAlerts = alerts.filter(
     (a) => (a.category === 'Obra' || a.category === 'Veículo') && a.status.severity !== 'ok',
   )
-  const colabAlerts = alerts.filter((a) => a.category === 'Colaborador')
+  const colabAlerts = alerts.filter(
+    (a) => a.category === 'Colaborador' && a.status.severity !== 'ok'
+  )
   const billAlerts = alerts.filter(
     (a) => a.category === 'Financeiro' && a.status.severity !== 'ok',
   )
