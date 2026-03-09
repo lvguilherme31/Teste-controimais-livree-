@@ -271,6 +271,7 @@ export const colaboradoresService = {
       } else {
         // Fallback for when we only send a description or expiry without a file
         finalFileName = description || `Documento ${type}`
+        finalPublicUrl = '#' // Dummy fallback URL since DB enforces NOT NULL
       }
 
       const { error } = await supabase.from('documentos_admissao').insert({
